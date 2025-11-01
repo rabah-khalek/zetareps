@@ -1,11 +1,11 @@
-# robots.txt for zetanotes.com
+# robots.txt for zetareps.com
 # Allow all search engines to crawl the site
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://zetanotes.com/sitemap.xml
+Sitemap: https://zetareps.com/sitemap.xml
 
 # Disallow crawling of archive folder if it exists
 User-agent: *

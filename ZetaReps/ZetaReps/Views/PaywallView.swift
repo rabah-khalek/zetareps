@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit
+import UIKit
 
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
@@ -177,13 +178,17 @@ struct PaywallView: View {
                             .foregroundColor(.white.opacity(0.9))
 
                             Button("Terms") {
-                                // Open terms URL
+                                if let url = URL(string: "https://zetareps.com/terms.html") {
+                                    UIApplication.shared.open(url)
+                                }
                             }
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.9))
 
                             Button("Privacy") {
-                                // Open privacy URL
+                                if let url = URL(string: "https://zetareps.com/privacy.html") {
+                                    UIApplication.shared.open(url)
+                                }
                             }
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.9))
@@ -337,6 +342,12 @@ struct PricingCard: View {
     var body: some View {
         Button(action: onSelect) {
             VStack(spacing: 12) {
+                // Subscription Title
+                Text(product.displayName)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                
                 // Badge
                 if let badge = badge {
                     Text(badge)

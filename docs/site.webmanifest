@@ -1,0 +1,14 @@
+{
+  "name": "ZetaReps",
+  "short_name": "ZetaReps",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#EE220C",
+  "background_color": "#000000",
+  "display": "standalone"
+}

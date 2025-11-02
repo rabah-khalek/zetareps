@@ -125,6 +125,21 @@ struct PaywallView: View {
                                 selectedProduct = monthly
                             }
                         }
+                        
+                        // Show message if no products loaded
+                        if subscriptionManager.annualProduct == nil && subscriptionManager.monthlyProduct == nil {
+                            VStack(spacing: 8) {
+                                Text("Loading subscription options...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.8))
+                                
+                                Text("If this persists, subscriptions may need to be configured in App Store Connect.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                                    .multilineTextAlignment(.center)
+                            }
+                            .padding()
+                        }
                     }
                     .padding(.horizontal)
 

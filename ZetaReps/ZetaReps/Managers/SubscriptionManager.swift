@@ -62,19 +62,33 @@ class SubscriptionManager: ObservableObject {
     func loadProducts() async {
         do {
             let products = try await Product.products(for: [monthlyProductID, annualProductID])
+            
+            print("📦 Loaded \(products.count) products from StoreKit")
+            for product in products {
+                print("   - \(product.id): \(product.displayPrice)")
+            }
 
             for product in products {
                 switch product.id {
                 case monthlyProductID:
                     monthlyProduct = product
+                    print("✅ Monthly product loaded: \(product.displayName)")
                 case annualProductID:
                     annualProduct = product
+                    print("✅ Annual product loaded: \(product.displayName)")
                 default:
                     break
                 }
             }
+            
+            if products.isEmpty {
+                print("⚠️ WARNING: No products found. Make sure subscriptions are created in App Store Connect with IDs:")
+                print("   - \(monthlyProductID)")
+                print("   - \(annualProductID)")
+            }
         } catch {
-            print("Failed to load products: \(error.localizedDescription)")
+            print("❌ Failed to load products: \(error.localizedDescription)")
+            print("   Error details: \(error)")
         }
     }
 

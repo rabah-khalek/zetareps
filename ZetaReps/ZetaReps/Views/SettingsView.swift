@@ -10,13 +10,11 @@ import SwiftData
 import UserNotifications
 
 enum ColorSchemeOption: String, CaseIterable {
-    case system = "System"
     case light = "Light"
     case dark = "Dark"
-    
+
     var colorScheme: ColorScheme? {
         switch self {
-        case .system: return nil
         case .light: return .light
         case .dark: return .dark
         }
@@ -123,8 +121,8 @@ struct SettingsView: View {
                         }
                         .padding(.bottom, 4)
                         
-                        // Toggle: Use Recommended Standards
-                        Toggle("Use Recommended Standards", isOn: $settings.useRecommendedStandards)
+                        // Toggle: Use Standards
+                        Toggle("Use Standards", isOn: $settings.useRecommendedStandards)
                             .font(.subheadline)
                             .fontWeight(.medium)
                         
@@ -243,7 +241,7 @@ struct SettingsView: View {
                         .padding(.bottom, 4)
                         
                         VStack(spacing: 12) {
-                            Toggle("Enable Workout Reminders", isOn: $settings.notificationsEnabled)
+                            Toggle("Enable Reminders", isOn: $settings.notificationsEnabled)
                                 .onChange(of: settings.notificationsEnabled) { _, newValue in
                                     if newValue && notificationManager.permissionStatus != .authorized {
                                         requestNotificationPermission()
@@ -413,67 +411,45 @@ struct SettingsView: View {
                                     .disabled(isRestoring)
                                 }
                             } else {
-                                Button(action: {
-                                    showingPaywall = true
-                                }) {
-                                    HStack(spacing: 12) {
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(
-                                                    LinearGradient(
-                                                        colors: [.yellow.opacity(0.2), .orange.opacity(0.15)],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
+                                VStack(spacing: 12) {
+                                    Button(action: {
+                                        showingPaywall = true
+                                    }) {
+                                        Text("Upgrade to Premium")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.blue, .purple],
+                                                            startPoint: .leading,
+                                                            endPoint: .trailing
+                                                        )
                                                     )
-                                                )
-                                                .frame(width: 48, height: 48)
-                                            
-                                            Image(systemName: "sparkles")
-                                                .foregroundStyle(
-                                                    LinearGradient(
-                                                        colors: [.yellow, .orange],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    )
-                                                )
-                                                .font(.title3)
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text("Upgrade to Premium")
-                                                .font(.body)
-                                                .fontWeight(.semibold)
-                                                .foregroundStyle(.primary)
-                                            Text("Unlock unlimited history & advanced features")
-                                                .font(.subheadline)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                        Spacer()
-                                        
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            )
                                     }
-                                    .padding(.vertical, 8)
-                                    .padding(.horizontal, 12)
-                                }
-                                .buttonStyle(.plain)
+                                    .buttonStyle(.plain)
 
-                                Button(action: {
-                                    restorePurchases()
-                                }) {
-                                    Text("Restore Purchases")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .fill(Color(.systemGray6))
-                                        )
+                                    Button(action: {
+                                        restorePurchases()
+                                    }) {
+                                        Text("Restore Purchases")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(Color(.systemGray6))
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(isRestoring)
                                 }
-                                .buttonStyle(.plain)
-                                .disabled(isRestoring)
                             }
                         }
                     }
@@ -697,7 +673,6 @@ struct SettingsView: View {
     
     private func iconName(for option: ColorSchemeOption) -> String {
         switch option {
-        case .system: return "circle.lefthalf.filled"
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         }

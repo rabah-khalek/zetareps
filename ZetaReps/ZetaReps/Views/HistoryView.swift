@@ -143,7 +143,7 @@ struct StatisticsSummaryView: View {
     var body: some View {
         HStack(spacing: 12) {
             StatBox(
-                title: "Total Reps",
+                title: "Reps",
                 value: "\(totalReps)",
                 icon: "number",
                 color: .blue
@@ -157,14 +157,14 @@ struct StatisticsSummaryView: View {
             )
 
             StatBox(
-                title: "Avg. Reps",
+                title: "Avg.",
                 value: "\(averageReps)",
                 icon: "chart.bar",
                 color: .orange
             )
 
             StatBox(
-                title: "Total Time",
+                title: "Time",
                 value: formattedTotalTime,
                 icon: "clock",
                 color: .purple
@@ -208,35 +208,35 @@ struct StatBox: View {
     @State private var animateValue = false
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             ZStack {
                 Circle()
                     .fill(color.opacity(0.15))
-                    .frame(width: 40, height: 40)
-                
+                    .frame(width: 36, height: 36)
+
                 Image(systemName: icon)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(color)
                     .symbolEffect(.bounce, value: animateValue)
             }
-            
+
             Text(value)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
                 .contentTransition(.numericText())
                 .foregroundStyle(color)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.6)
 
             Text(title)
                 .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .padding(.horizontal, 10)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 6)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 16)

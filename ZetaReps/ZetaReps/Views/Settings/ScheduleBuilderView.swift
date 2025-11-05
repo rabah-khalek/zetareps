@@ -15,6 +15,8 @@ struct ScheduleBuilderView: View {
     @State private var intervalHours: Int = 2
     @State private var startTime = Date()
     @State private var endTime = Date()
+    @State private var morningTime = Date()
+    @State private var eveningTime = Date()
     @State private var selectedDays: Set<Int> = [2, 3, 4, 5, 6] // Mon-Fri
     @State private var customTimes: [Date] = []
     @State private var showingAddTime = false
@@ -76,6 +78,62 @@ struct ScheduleBuilderView: View {
                         .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
                     )
 
+                    // Time Range Card (for hourly)
+                    if scheduleType == .hourly {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Image(systemName: "clock")
+                                    .font(.title3)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .cyan],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                Text("Active Hours")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+
+                                Spacer()
+                            }
+
+                            DatePicker("Start Time",
+                                     selection: $startTime,
+                                     displayedComponents: .hourAndMinute)
+
+                            DatePicker("End Time",
+                                     selection: $endTime,
+                                     displayedComponents: .hourAndMinute)
+
+                            Text("Reminders will be sent every hour within this time range")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(20)
+                        .background(
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(.systemBackground))
+
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.primary.opacity(0.15),
+                                                Color.primary.opacity(0.08)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            }
+                            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                        )
+                    }
+
                     // Time Range Card (for interval-based)
                     if scheduleType == .interval {
                         VStack(alignment: .leading, spacing: 16) {
@@ -89,22 +147,22 @@ struct ScheduleBuilderView: View {
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                
+
                                 Text("Active Hours")
                                     .font(.headline)
                                     .fontWeight(.semibold)
-                                
+
                                 Spacer()
                             }
-                            
+
                             DatePicker("Start Time",
                                      selection: $startTime,
                                      displayedComponents: .hourAndMinute)
-                            
+
                             DatePicker("End Time",
                                      selection: $endTime,
                                      displayedComponents: .hourAndMinute)
-                            
+
                             Stepper("Every \(intervalHours) hour\(intervalHours > 1 ? "s" : "")",
                                    value: $intervalHours,
                                    in: 1...12)
@@ -114,7 +172,7 @@ struct ScheduleBuilderView: View {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 20)
                                     .fill(Color(.systemBackground))
-                                
+
                                 RoundedRectangle(cornerRadius: 20)
                                     .stroke(
                                         LinearGradient(
@@ -186,6 +244,114 @@ struct ScheduleBuilderView: View {
                                 RoundedRectangle(cornerRadius: 20)
                                     .fill(Color(.systemBackground))
                                 
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.primary.opacity(0.15),
+                                                Color.primary.opacity(0.08)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            }
+                            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                        )
+                    }
+
+                    // Daily Time Picker Card
+                    if scheduleType == .daily {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Image(systemName: "alarm")
+                                    .font(.title3)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                Text("Daily Time")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+
+                                Spacer()
+                            }
+
+                            DatePicker("Reminder Time",
+                                     selection: $startTime,
+                                     displayedComponents: .hourAndMinute)
+
+                            Text("Set the time for your daily reminder")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(20)
+                        .background(
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(.systemBackground))
+
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.primary.opacity(0.15),
+                                                Color.primary.opacity(0.08)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            }
+                            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                        )
+                    }
+
+                    // Twice Daily Time Pickers Card
+                    if scheduleType == .twiceDaily {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Image(systemName: "sunrise.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.orange, .yellow],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                Text("Reminder Times")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+
+                                Spacer()
+                            }
+
+                            DatePicker("Morning Time",
+                                     selection: $morningTime,
+                                     displayedComponents: .hourAndMinute)
+
+                            DatePicker("Evening Time",
+                                     selection: $eveningTime,
+                                     displayedComponents: .hourAndMinute)
+
+                            Text("Set morning and evening reminder times")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(20)
+                        .background(
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(.systemBackground))
+
                                 RoundedRectangle(cornerRadius: 20)
                                     .stroke(
                                         LinearGradient(
@@ -435,16 +601,19 @@ struct ScheduleBuilderView: View {
 
     private var estimatedCount: Int {
         let timeSlots: Int
+        let calendar = Calendar.current
 
         switch scheduleType {
         case .daily:
             timeSlots = 1
         case .hourly:
-            timeSlots = 13 // 8 AM to 8 PM
+            let startHour = calendar.component(.hour, from: startTime)
+            let endHour = calendar.component(.hour, from: endTime)
+            let hoursInRange = max(endHour - startHour, 1)
+            timeSlots = hoursInRange + 1 // +1 to include the end hour
         case .twiceDaily:
             timeSlots = 2
         case .interval:
-            let calendar = Calendar.current
             let startHour = calendar.component(.hour, from: startTime)
             let endHour = calendar.component(.hour, from: endTime)
             let hoursInRange = max(endHour - startHour, 1)
@@ -461,7 +630,7 @@ struct ScheduleBuilderView: View {
         case .daily:
             return "One reminder per day at a specific time"
         case .hourly:
-            return "Reminders every hour from 8 AM to 8 PM"
+            return "Reminders every hour during your active hours"
         case .twiceDaily:
             return "Two reminders per day (morning and evening)"
         case .interval:
@@ -477,11 +646,16 @@ struct ScheduleBuilderView: View {
 
         switch scheduleType {
         case .daily:
-            timesText = "once daily"
+            let time = startTime.formatted(date: .omitted, time: .shortened)
+            timesText = "once daily at \(time)"
         case .hourly:
-            timesText = "every hour, 8 AM - 8 PM"
+            let start = startTime.formatted(date: .omitted, time: .shortened)
+            let end = endTime.formatted(date: .omitted, time: .shortened)
+            timesText = "every hour, \(start) - \(end)"
         case .twiceDaily:
-            timesText = "at 9 AM and 6 PM"
+            let morning = morningTime.formatted(date: .omitted, time: .shortened)
+            let evening = eveningTime.formatted(date: .omitted, time: .shortened)
+            timesText = "at \(morning) and \(evening)"
         case .interval:
             let start = startTime.formatted(date: .omitted, time: .shortened)
             let end = endTime.formatted(date: .omitted, time: .shortened)
@@ -527,6 +701,8 @@ struct ScheduleBuilderView: View {
     }
 
     private func loadCurrentSchedule() {
+        let calendar = Calendar.current
+
         if let rule = settings.currentScheduleRule {
             scheduleType = rule.scheduleType
             selectedDays = rule.activeDays
@@ -536,7 +712,6 @@ struct ScheduleBuilderView: View {
             }
 
             // Convert TimeComponents to Date for pickers
-            let calendar = Calendar.current
             startTime = calendar.date(from: DateComponents(hour: rule.startTime.hour, minute: rule.startTime.minute)) ?? Date()
             endTime = calendar.date(from: DateComponents(hour: rule.endTime.hour, minute: rule.endTime.minute)) ?? Date()
 
@@ -544,11 +719,36 @@ struct ScheduleBuilderView: View {
             customTimes = rule.customTimes.compactMap {
                 calendar.date(from: DateComponents(hour: $0.hour, minute: $0.minute))
             }
+
+            // Load specific times based on schedule type
+            switch rule.scheduleType {
+            case .daily:
+                // For daily, use the first custom time or default to 9 AM
+                if let firstTime = rule.customTimes.first {
+                    startTime = calendar.date(from: DateComponents(hour: firstTime.hour, minute: firstTime.minute)) ?? Date()
+                } else {
+                    startTime = calendar.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+                }
+
+            case .twiceDaily:
+                // For twice daily, use first two custom times or default to 9 AM and 6 PM
+                if rule.customTimes.count >= 2 {
+                    morningTime = calendar.date(from: DateComponents(hour: rule.customTimes[0].hour, minute: rule.customTimes[0].minute)) ?? Date()
+                    eveningTime = calendar.date(from: DateComponents(hour: rule.customTimes[1].hour, minute: rule.customTimes[1].minute)) ?? Date()
+                } else {
+                    morningTime = calendar.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+                    eveningTime = calendar.date(from: DateComponents(hour: 18, minute: 0)) ?? Date()
+                }
+
+            default:
+                break
+            }
         } else {
             // Set defaults
-            let calendar = Calendar.current
             startTime = calendar.date(from: DateComponents(hour: 8, minute: 0)) ?? Date()
             endTime = calendar.date(from: DateComponents(hour: 22, minute: 0)) ?? Date()
+            morningTime = calendar.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+            eveningTime = calendar.date(from: DateComponents(hour: 18, minute: 0)) ?? Date()
         }
     }
 
@@ -556,7 +756,35 @@ struct ScheduleBuilderView: View {
         let startComponents = TimeComponents.from(date: startTime)
         let endComponents = TimeComponents.from(date: endTime)
 
-        let customTimeComponents = customTimes.map { TimeComponents.from(date: $0) }
+        var customTimeComponents: [TimeComponents]
+
+        // Handle custom times based on schedule type
+        switch scheduleType {
+        case .daily:
+            // For daily, save the single time in customTimes
+            customTimeComponents = [TimeComponents.from(date: startTime)]
+
+        case .twiceDaily:
+            // For twice daily, save morning and evening times
+            customTimeComponents = [
+                TimeComponents.from(date: morningTime),
+                TimeComponents.from(date: eveningTime)
+            ].sorted { time1, time2 in
+                // Sort by hour, then minute
+                if time1.hour != time2.hour {
+                    return time1.hour < time2.hour
+                }
+                return time1.minute < time2.minute
+            }
+
+        case .custom:
+            // For custom, use the customTimes array
+            customTimeComponents = customTimes.map { TimeComponents.from(date: $0) }
+
+        default:
+            // For interval and hourly, use empty array
+            customTimeComponents = []
+        }
 
         let rule = ScheduleRule(
             name: "My Schedule",
@@ -580,7 +808,7 @@ struct ScheduleBuilderView: View {
                 print("⚠️ Notification permission denied")
             }
         }
-        
+
         // Post notification to refresh countdown timer
         NotificationCenter.default.post(name: NSNotification.Name("ScheduleUpdated"), object: nil)
 
@@ -601,6 +829,23 @@ struct ScheduleBuilderView: View {
 
         customTimes = preset.customTimes.compactMap {
             calendar.date(from: DateComponents(hour: $0.hour, minute: $0.minute))
+        }
+
+        // Load specific times based on schedule type
+        switch preset.scheduleType {
+        case .daily:
+            if let firstTime = preset.customTimes.first {
+                startTime = calendar.date(from: DateComponents(hour: firstTime.hour, minute: firstTime.minute)) ?? Date()
+            }
+
+        case .twiceDaily:
+            if preset.customTimes.count >= 2 {
+                morningTime = calendar.date(from: DateComponents(hour: preset.customTimes[0].hour, minute: preset.customTimes[0].minute)) ?? Date()
+                eveningTime = calendar.date(from: DateComponents(hour: preset.customTimes[1].hour, minute: preset.customTimes[1].minute)) ?? Date()
+            }
+
+        default:
+            break
         }
     }
 }

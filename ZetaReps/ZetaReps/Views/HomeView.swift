@@ -328,11 +328,16 @@ struct HomeView: View {
         if let scheduledTime = getNextScheduledTime(settings: settings) {
             return scheduledTime
         }
-        
+
+        // If reminders are disabled, don't show any next time
+        guard settings.notificationsEnabled else {
+            return nil
+        }
+
         // If no schedule, use ideal next workout based on target days
         let calendar = Calendar.current
         let now = Date()
-        
+
         // Get last workout date
         guard let lastWorkoutDate = workouts.map({ $0.date }).max() else {
             // No workouts yet, suggest tomorrow at a reasonable time
@@ -342,13 +347,13 @@ struct HomeView: View {
             }
             return nil
         }
-        
+
         // Calculate ideal next workout based on target days
         let daysBetweenWorkouts = 7.0 / Double(settings.effectiveTargetDays)
         let idealNextWorkout = calendar.date(byAdding: .day, value: Int(daysBetweenWorkouts), to: calendar.startOfDay(for: lastWorkoutDate))
-        
+
         guard let idealNext = idealNextWorkout else { return nil }
-        
+
         // If ideal time is in the past, move to tomorrow
         if idealNext <= now {
             if let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) {
@@ -356,7 +361,7 @@ struct HomeView: View {
                 return tomorrowMorning?.timeIntervalSince(now)
             }
         }
-        
+
         // Calculate time until ideal next workout
         return idealNext.timeIntervalSince(now)
     }
@@ -665,22 +670,26 @@ struct RecordItem: View {
     var suffix: String = ""
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(.body)
                 .foregroundStyle(color)
 
             Text("\(value)\(suffix)")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
 
             Text(title)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
+        .padding(.horizontal, 4)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(color.opacity(0.1))
@@ -776,11 +785,13 @@ struct BentoStatsGrid: View {
                 icon: "flame.fill",
                 gradient: [.yellow, .orange]
             )
-            
-            DowntimeCard(calculateNextTime: {
-                HomeView.calculateNextWorkoutTime(workouts: workouts, settings: settings) ?? 0
-            })
-            .id("downtime-\(settings.effectiveTargetDays)-\(settings.notificationsEnabled)-\(settings.reminderFrequency.rawValue)-\(settings.customTimes.map { "\($0.hour ?? 0):\($0.minute ?? 0)" }.joined(separator: ","))-\(settings.currentScheduleRule?.activeDays.sorted().map(String.init).joined(separator: ",") ?? "none")-\(workouts.count)")
+
+            if settings.notificationsEnabled {
+                DowntimeCard(calculateNextTime: {
+                    HomeView.calculateNextWorkoutTime(workouts: workouts, settings: settings) ?? 0
+                })
+                .id("downtime-\(settings.effectiveTargetDays)-\(settings.notificationsEnabled)-\(settings.reminderFrequency.rawValue)-\(settings.customTimes.map { "\($0.hour ?? 0):\($0.minute ?? 0)" }.joined(separator: ","))-\(settings.currentScheduleRule?.activeDays.sorted().map(String.init).joined(separator: ",") ?? "none")-\(workouts.count)")
+            }
         }
     }
 }
@@ -820,7 +831,7 @@ struct DowntimeCard: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "clock.fill")
-                .font(.title2)
+                .font(.title3)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [.blue, .cyan],
@@ -828,22 +839,24 @@ struct DowntimeCard: View {
                         endPoint: .bottomTrailing
                     )
                 )
-            
+
             VStack(spacing: 4) {
                 Text(timeUntilNext)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .contentTransition(.numericText())
-                
+
                 Text("Next")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.7)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 100)
         .padding(.vertical, 16)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 8)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 20)
@@ -932,7 +945,7 @@ struct GlassBentoCard: View {
                 VStack(spacing: 12) {
                     // Icon with gradient
                     Image(systemName: icon)
-                        .font(.title2)
+                        .font(.title3)
                         .foregroundStyle(
                             LinearGradient(
                                 colors: gradient,
@@ -944,18 +957,20 @@ struct GlassBentoCard: View {
                     // Text content
                     VStack(spacing: 4) {
                         Text(value)
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
 
                         Text(title)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .minimumScaleFactor(0.7)
                     }
                 }
                 .frame(maxWidth: .infinity, minHeight: 100)
                 .padding(.vertical, 16)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 8)
             }
         }
         .background(

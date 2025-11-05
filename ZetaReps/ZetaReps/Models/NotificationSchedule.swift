@@ -10,11 +10,11 @@ import Foundation
 // MARK: - Schedule Types
 
 enum ScheduleType: String, Codable, CaseIterable {
+    case hourly = "Hourly"
     case daily = "Daily"
     case interval = "Every X Hours"
-    case custom = "Custom Times"
-    case hourly = "Hourly"
     case twiceDaily = "Twice Daily"
+    case custom = "Custom Times"
 
     var description: String {
         rawValue
@@ -139,8 +139,9 @@ struct ScheduleRule: Codable, Identifiable {
             return activeDays.count
 
         case .hourly:
-            // 8 AM to 8 PM = 13 hours
-            return 13 * activeDays.count
+            let hoursInRange = max(endTime.hour - startTime.hour, 1)
+            let slotsPerDay = hoursInRange + 1 // +1 to include end hour
+            return slotsPerDay * activeDays.count
 
         case .twiceDaily:
             return 2 * activeDays.count
@@ -179,10 +180,14 @@ struct ScheduleRule: Codable, Identifiable {
             return "Daily at \(customTimes.first?.formatted ?? "9:00 AM")"
 
         case .hourly:
-            return "Every hour, 8 AM - 8 PM"
+            return "Every hour, \(startTime.formatted) - \(endTime.formatted)"
 
         case .twiceDaily:
-            return "Twice daily (9 AM, 6 PM)"
+            if customTimes.count >= 2 {
+                return "Twice daily (\(customTimes[0].formatted), \(customTimes[1].formatted))"
+            } else {
+                return "Twice daily (9:00 AM, 6:00 PM)"
+            }
 
         case .interval:
             guard let hours = intervalHours else { return "Interval" }
@@ -234,14 +239,22 @@ struct ScheduleRule: Codable, Identifiable {
             }
 
         case .hourly:
-            // 8 AM to 8 PM (13 notifications)
-            for hour in 8...20 {
-                slots.append((hour, 0))
+            // Generate hourly slots between startTime and endTime
+            var currentHour = startTime.hour
+            while currentHour <= endTime.hour {
+                slots.append((currentHour, startTime.minute))
+                currentHour += 1
             }
 
         case .twiceDaily:
-            slots.append((9, 0))  // 9 AM
-            slots.append((18, 0)) // 6 PM
+            // Use customTimes if available, otherwise default to 9 AM and 6 PM
+            if customTimes.count >= 2 {
+                slots.append((customTimes[0].hour, customTimes[0].minute))
+                slots.append((customTimes[1].hour, customTimes[1].minute))
+            } else {
+                slots.append((9, 0))  // 9 AM
+                slots.append((18, 0)) // 6 PM
+            }
 
         case .interval:
             guard let interval = intervalHours, interval > 0 else { break }

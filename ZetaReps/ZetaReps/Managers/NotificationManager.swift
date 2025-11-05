@@ -362,7 +362,7 @@ class NotificationManager: NSObject, ObservableObject {
         // Smart messages based on context - always use "No Pain No Gain!" as main message
         if daysSinceLastWorkout >= 3 {
             // Coming back after break
-            return ("Workout Reminder", "No Pain No Gain! Ready to start fresh?")
+            return ("Workout Reminder", "No Pain No Gain! Ready for your workout?")
         } else {
             // Normal reminder
             let hour = calendar.component(.hour, from: now)

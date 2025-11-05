@@ -1080,19 +1080,19 @@ struct WorkoutCalendarView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Last 7 Days")
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 ForEach(0..<7, id: \.self) { index in
                     let date = calendar.date(byAdding: .day, value: -6 + index, to: Date()) ?? Date()
                     let intensity = intensity(for: date)
                     let isRest = isRestDay(date)
 
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         Text(date.formatted(.dateTime.weekday(.narrow)))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -1100,11 +1100,11 @@ struct WorkoutCalendarView: View {
                         ZStack {
                             RoundedRectangle(cornerRadius: 6)
                                 .fill(dayColor(intensity: intensity, isRest: isRest))
-                                .frame(width: 36, height: 36)
+                                .frame(width: 32, height: 32)
 
                             if isRest {
                                 Image(systemName: "moon.zzz.fill")
-                                    .font(.caption)
+                                    .font(.system(size: 10))
                                     .foregroundStyle(.white)
                             } else {
                                 Text("\(calendar.component(.day, from: date))")
@@ -1130,10 +1130,10 @@ struct WorkoutCalendarView: View {
             }
 
             // Legend - centered
-            VStack(spacing: 8) {
-                HStack(spacing: 12) {
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Spacer()
-                    
+
                     Text("Less")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -1141,42 +1141,46 @@ struct WorkoutCalendarView: View {
                     ForEach([0.0, 0.25, 0.5, 0.75, 1.0], id: \.self) { level in
                         RoundedRectangle(cornerRadius: 3)
                             .fill(intensityColor(level))
-                            .frame(width: 12, height: 12)
+                            .frame(width: 10, height: 10)
                     }
 
                     Text("More")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    
+
                     Spacer()
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
             }
-            
+
             // Settings hints - grouped and left-aligned
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 4) {
                     Image(systemName: "hand.tap.fill")
                         .font(.caption2)
                         .foregroundStyle(.blue)
                     Text("Tap any day to view and edit workouts")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
-                
-                HStack(spacing: 6) {
+
+                HStack(spacing: 4) {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(.indigo)
-                        .frame(width: 12, height: 12)
-                    
+                        .frame(width: 10, height: 10)
+
                     Text("= Rest Day (long press to toggle)")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
-        .padding(20)
+        .padding(16)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 20)

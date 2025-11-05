@@ -773,7 +773,7 @@ struct BentoStatsGrid: View {
             )
 
             GlassBentoCard(
-                title: "This Week",
+                title: "Workouts",
                 value: "\(weekDaysCompleted)/\(targetDays)",
                 icon: "chart.bar.fill",
                 gradient: [.green, .mint]
@@ -829,9 +829,9 @@ struct DowntimeCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Image(systemName: "clock.fill")
-                .font(.title3)
+                .font(.body)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [.blue, .cyan],
@@ -840,9 +840,9 @@ struct DowntimeCard: View {
                     )
                 )
 
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Text(timeUntilNext)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .contentTransition(.numericText())
@@ -854,9 +854,9 @@ struct DowntimeCard: View {
                     .minimumScaleFactor(0.7)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 100)
-        .padding(.vertical, 16)
-        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, minHeight: 85)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 6)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 20)
@@ -942,10 +942,10 @@ struct GlassBentoCard: View {
                 .padding(24)
             } else {
                 // Small card layout (vertical)
-                VStack(spacing: 12) {
+                VStack(spacing: 8) {
                     // Icon with gradient
                     Image(systemName: icon)
-                        .font(.title3)
+                        .font(.body)
                         .foregroundStyle(
                             LinearGradient(
                                 colors: gradient,
@@ -955,9 +955,9 @@ struct GlassBentoCard: View {
                         )
 
                     // Text content
-                    VStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         Text(value)
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
 
@@ -968,9 +968,9 @@ struct GlassBentoCard: View {
                             .minimumScaleFactor(0.7)
                     }
                 }
-                .frame(maxWidth: .infinity, minHeight: 100)
-                .padding(.vertical, 16)
-                .padding(.horizontal, 8)
+                .frame(maxWidth: .infinity, minHeight: 85)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 6)
             }
         }
         .background(

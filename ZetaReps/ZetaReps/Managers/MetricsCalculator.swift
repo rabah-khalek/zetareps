@@ -408,7 +408,7 @@ class MetricsCalculator {
         case 4..<6:
             return ("Fair", "orange")
         case 0..<4:
-            return ("Needs Work", "red")
+            return ("Poor", "red")
         default:
             return ("Unknown", "gray")
         }

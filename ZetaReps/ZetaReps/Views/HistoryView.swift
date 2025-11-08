@@ -439,12 +439,12 @@ struct MetricsProgressChartView: View {
             // Chart
             Chart {
                 // Range indicator lines (horizontal rules)
-                // Needs Work (0-4) - Red
+                // Poor (0-4) - Red
                 RuleMark(y: .value("Threshold", 4))
                     .foregroundStyle(.red.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
                     .annotation(position: .top, alignment: .leading) {
-                        Text("Needs Work")
+                        Text("Poor")
                             .font(.caption2)
                             .foregroundColor(.red)
                             .padding(.horizontal, 4)

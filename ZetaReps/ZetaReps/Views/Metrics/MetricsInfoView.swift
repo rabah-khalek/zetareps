@@ -369,7 +369,7 @@ struct ScoringGuideCard: View {
                 ScoreRangeRow(range: "8.0 - 10.0", label: "Excellent", color: .green)
                 ScoreRangeRow(range: "6.0 - 7.9", label: "Good", color: .blue)
                 ScoreRangeRow(range: "4.0 - 5.9", label: "Fair", color: .orange)
-                ScoreRangeRow(range: "0.0 - 3.9", label: "Needs Work", color: .red)
+                ScoreRangeRow(range: "0.0 - 3.9", label: "Poor", color: .red)
             }
         }
         .padding(20)

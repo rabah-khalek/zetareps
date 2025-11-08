@@ -339,7 +339,7 @@ Edit [MetricsCalculator.swift](ZetaReps/Managers/MetricsCalculator.swift):
 
 ### Customize Performance Bands
 
-Edit chart views in [HistoryView.swift](ZetaReps/Views/HistoryView.swift) to modify performance band thresholds (Excellent/Good/Fair/Needs Work).
+Edit chart views in [HistoryView.swift](ZetaReps/Views/HistoryView.swift) to modify performance band thresholds (Excellent/Good/Fair/Poor).
 
 ### Add More Personal Records
 

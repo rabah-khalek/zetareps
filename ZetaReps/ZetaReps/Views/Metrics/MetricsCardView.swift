@@ -153,7 +153,7 @@ struct ScoreLegend: View {
             LegendItem(color: .green, range: "8-10", label: "Excellent")
             LegendItem(color: .blue, range: "6-8", label: "Good")
             LegendItem(color: .orange, range: "4-6", label: "Fair")
-            LegendItem(color: .red, range: "0-4", label: "Needs Work")
+            LegendItem(color: .red, range: "0-4", label: "Poor")
         }
         .font(.caption2)
     }

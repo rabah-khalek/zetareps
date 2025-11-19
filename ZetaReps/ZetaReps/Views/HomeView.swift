@@ -11,7 +11,6 @@ import SwiftData
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Workout.date, order: .reverse) private var workouts: [Workout]
-    @Query private var restDays: [RestDay]
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     @ObservedObject private var settings = AppSettings.shared
 
@@ -290,7 +289,7 @@ struct HomeView: View {
     }
 
     private var currentStreak: Int {
-        MetricsCalculator.calculateCurrentStreak(workouts: workouts, restDays: restDays)
+        MetricsCalculator.calculateCurrentStreak(workouts: workouts)
     }
 
     private var totalPushups: Int {
@@ -298,7 +297,7 @@ struct HomeView: View {
     }
 
     private var personalRecords: PersonalRecords {
-        MetricsCalculator.calculatePersonalRecords(workouts: workouts, restDays: restDays)
+        MetricsCalculator.calculatePersonalRecords(workouts: workouts)
     }
 
     private var weekDaysCompleted: Int {

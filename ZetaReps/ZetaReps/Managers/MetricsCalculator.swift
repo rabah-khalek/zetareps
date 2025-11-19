@@ -217,33 +217,24 @@ class MetricsCalculator {
     }
 
     /// Calculate current workout streak
-    static func calculateCurrentStreak(workouts: [Workout], restDays: [RestDay] = []) -> Int {
+    static func calculateCurrentStreak(workouts: [Workout]) -> Int {
         guard !workouts.isEmpty else { return 0 }
 
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
-        let restDayDates = Set(restDays.map { calendar.startOfDay(for: $0.date) })
         let sortedWorkouts = workouts
             .map { calendar.startOfDay(for: $0.date) }
             .sorted(by: >)
 
         guard let lastWorkout = sortedWorkouts.first else { return 0 }
 
-        // Check if streak is still active (within last 2 days, or has a rest day)
+        // Check if streak is still active (within last day - allow 1 day gap)
         let daysSinceLastWorkout = calendar.dateComponents([.day],
                                                           from: lastWorkout,
                                                           to: today).day ?? 0
 
-        // Check if there's a rest day covering the gap
-        let hasRestDayCoveringGap = (0...daysSinceLastWorkout).contains { offset in
-            if let date = calendar.date(byAdding: .day, value: -offset, to: today) {
-                return restDayDates.contains(calendar.startOfDay(for: date))
-            }
-            return false
-        }
-
-        guard daysSinceLastWorkout <= 2 || hasRestDayCoveringGap else { return 0 }
+        guard daysSinceLastWorkout <= 1 else { return 0 }
 
         var streak = 0
         var currentDate = lastWorkout
@@ -260,18 +251,7 @@ class MetricsCalculator {
                                                   from: workoutDate,
                                                   to: currentDate).day ?? 0
 
-            // Check if there are rest days filling the gap
-            var hasRestDaysInGap = true
-            if daysDiff > 2 {
-                let gapDays = (1..<daysDiff).compactMap { offset in
-                    calendar.date(byAdding: .day, value: offset, to: workoutDate)
-                }
-                hasRestDaysInGap = gapDays.allSatisfy { date in
-                    restDayDates.contains(calendar.startOfDay(for: date))
-                }
-            }
-
-            if daysDiff <= 2 || hasRestDaysInGap {  // Allow 1 day gap, or rest days fill gap
+            if daysDiff <= 1 {  // Allow 1 day gap max
                 streak += 1
                 currentDate = workoutDate
             } else {
@@ -538,9 +518,8 @@ class MetricsCalculator {
     /// Calculate all personal records from workout history
     /// - Parameters:
     ///   - workouts: All workout records
-    ///   - restDays: All rest day records (for streak calculation)
     /// - Returns: PersonalRecords struct with all-time bests
-    static func calculatePersonalRecords(workouts: [Workout], restDays: [RestDay] = []) -> PersonalRecords {
+    static func calculatePersonalRecords(workouts: [Workout]) -> PersonalRecords {
         guard !workouts.isEmpty else {
             return PersonalRecords(
                 bestSingleWorkout: 0,
@@ -571,7 +550,7 @@ class MetricsCalculator {
         let bestMonthTotal = calculateBestRollingPeriod(workouts: workouts, days: 30)
 
         // Longest streak ever (not just current)
-        let longestStreak = calculateLongestEverStreak(workouts: workouts, restDays: restDays)
+        let longestStreak = calculateLongestEverStreak(workouts: workouts)
 
         return PersonalRecords(
             bestSingleWorkout: bestSingleWorkout,
@@ -622,11 +601,10 @@ class MetricsCalculator {
     }
 
     /// Calculate longest ever streak (not just current streak)
-    private static func calculateLongestEverStreak(workouts: [Workout], restDays: [RestDay] = []) -> Int {
+    private static func calculateLongestEverStreak(workouts: [Workout]) -> Int {
         guard !workouts.isEmpty else { return 0 }
 
         let calendar = Calendar.current
-        let restDayDates = Set(restDays.map { calendar.startOfDay(for: $0.date) })
         let sortedWorkouts = workouts
             .map { calendar.startOfDay(for: $0.date) }
             .sorted()
@@ -642,16 +620,8 @@ class MetricsCalculator {
         for i in 1..<uniqueDays.count {
             let daysBetween = calendar.dateComponents([.day], from: uniqueDays[i-1], to: uniqueDays[i]).day ?? 0
 
-            // Check if there are rest days filling the gap
-            let gapDays = (1..<daysBetween).compactMap { offset in
-                calendar.date(byAdding: .day, value: offset, to: uniqueDays[i-1])
-            }
-            let hasRestDaysInGap = gapDays.allSatisfy { date in
-                restDayDates.contains(calendar.startOfDay(for: date))
-            }
-
-            // Allow up to 2-day gap, or rest days fill gap
-            if daysBetween <= 2 || (daysBetween > 2 && hasRestDaysInGap) {
+            // Allow up to 1-day gap
+            if daysBetween <= 1 {
                 currentStreak += 1
                 longestStreak = max(longestStreak, currentStreak)
             } else {

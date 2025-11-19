@@ -1030,12 +1030,8 @@ struct CompactWorkoutCard: View {
 // MARK: - Workout Calendar View
 
 struct WorkoutCalendarView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var restDays: [RestDay]
-
     let workouts: [Workout]
     var onDayTapped: ((Date) -> Void)? = nil
-    var onLongPress: ((Date) -> Void)? = nil
 
     private var calendar: Calendar { Calendar.current }
 
@@ -1052,33 +1048,6 @@ struct WorkoutCalendarView: View {
         return min(Double(totalReps) / 100.0, 1.0) // Normalize to 0-1
     }
 
-    private func isRestDay(_ date: Date) -> Bool {
-        restDays.contains { calendar.isDate($0.date, inSameDayAs: date) }
-    }
-
-    private func toggleRestDay(for date: Date) {
-        let dayStart = calendar.startOfDay(for: date)
-
-        if let existingRestDay = restDays.first(where: { calendar.isDate($0.date, inSameDayAs: date) }) {
-            // Remove rest day
-            modelContext.delete(existingRestDay)
-        } else {
-            // Add rest day
-            let restDay = RestDay(date: dayStart)
-            modelContext.insert(restDay)
-        }
-
-        do {
-            try modelContext.save()
-        } catch {
-            print("❌ Error saving rest day: \(error.localizedDescription)")
-        }
-
-        // Haptic feedback
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Last 7 Days")
@@ -1090,7 +1059,6 @@ struct WorkoutCalendarView: View {
                 ForEach(0..<7, id: \.self) { index in
                     let date = calendar.date(byAdding: .day, value: -6 + index, to: Date()) ?? Date()
                     let intensity = intensity(for: date)
-                    let isRest = isRestDay(date)
 
                     VStack(spacing: 4) {
                         Text(date.formatted(.dateTime.weekday(.narrow)))
@@ -1099,19 +1067,13 @@ struct WorkoutCalendarView: View {
 
                         ZStack {
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(dayColor(intensity: intensity, isRest: isRest))
+                                .fill(dayColor(intensity: intensity))
                                 .frame(width: 32, height: 32)
 
-                            if isRest {
-                                Image(systemName: "moon.zzz.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(.white)
-                            } else {
-                                Text("\(calendar.component(.day, from: date))")
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(intensity > 0.3 ? .white : .primary)
-                            }
+                            Text("\(calendar.component(.day, from: date))")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .foregroundStyle(intensity > 0.3 ? .white : .primary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -1119,12 +1081,7 @@ struct WorkoutCalendarView: View {
                     .onTapGesture {
                         if intensity > 0 {
                             onDayTapped?(date)
-                        } else if isRest {
-                            onLongPress?(date)
                         }
-                    }
-                    .onLongPressGesture(minimumDuration: 0.5) {
-                        toggleRestDay(for: date)
                     }
                 }
             }
@@ -1153,30 +1110,16 @@ struct WorkoutCalendarView: View {
                 .padding(.top, 4)
             }
 
-            // Settings hints - grouped and left-aligned
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 4) {
-                    Image(systemName: "hand.tap.fill")
-                        .font(.caption2)
-                        .foregroundStyle(.blue)
-                    Text("Tap any day to view and edit workouts")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-
-                HStack(spacing: 4) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(.indigo)
-                        .frame(width: 10, height: 10)
-
-                    Text("= Rest Day (long press to toggle)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
+            // Settings hint
+            HStack(spacing: 4) {
+                Image(systemName: "hand.tap.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.blue)
+                Text("Tap any day to view and edit workouts")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .padding(.top, 4)
         }
@@ -1203,10 +1146,8 @@ struct WorkoutCalendarView: View {
         )
     }
 
-    private func dayColor(intensity: Double, isRest: Bool) -> Color {
-        if isRest {
-            return .indigo
-        } else if intensity == 0 {
+    private func dayColor(intensity: Double) -> Color {
+        if intensity == 0 {
             return Color(.systemGray5)
         } else if intensity < 0.25 {
             return .green.opacity(0.3)

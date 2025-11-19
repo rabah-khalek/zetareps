@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import AVFoundation
 
 struct WorkoutSessionView: View {
     @Environment(\.dismiss) private var dismiss
@@ -246,6 +247,7 @@ struct WorkoutSessionView: View {
                             icon: "play.fill",
                             color: startButtonColor,
                             action: {
+                                playSound(.timerStart)
                                 let impact = UIImpactFeedbackGenerator(style: .medium)
                                 impact.impactOccurred()
                                 timerManager.start()
@@ -260,6 +262,7 @@ struct WorkoutSessionView: View {
                                 icon: "play.fill",
                                 color: startButtonColor,
                                 action: {
+                                    playSound(.timerStart)
                                     let impact = UIImpactFeedbackGenerator(style: .medium)
                                     impact.impactOccurred()
                                     startNextSet()
@@ -274,7 +277,8 @@ struct WorkoutSessionView: View {
                             icon: "forward.fill",
                             color: skipButtonColor,
                             action: {
-                                let impact = UIImpactFeedbackGenerator(style: .medium)
+                                playSound(.skipRest)
+                                let impact = UIImpactFeedbackGenerator(style: .light)
                                 impact.impactOccurred()
                                 skipRest()
                             },
@@ -346,13 +350,16 @@ struct WorkoutSessionView: View {
         // Add reps for this set (using target as placeholder, user can adjust in CompleteWorkoutView)
         repsCompleted += targetRepsPerSet
         completedSets += 1
-        
-        // Add haptic feedback
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
-        
+
         // If more sets remaining, start rest timer
         if completedSets < targetSets {
+            // Play set completion sound
+            playSound(.setComplete)
+
+            // Add haptic feedback
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentSet += 1
             }
@@ -364,6 +371,13 @@ struct WorkoutSessionView: View {
             }
         } else {
             // All sets done - user can finish workout
+            // Play completion sound
+            playSound(.workoutComplete)
+
+            // Stronger haptic for workout completion
+            let impact = UIImpactFeedbackGenerator(style: .heavy)
+            impact.impactOccurred()
+
             withAnimation(.easeInOut(duration: 0.3)) {
                 timerManager.pause() // Pause so they can review before finishing
             }
@@ -375,7 +389,18 @@ struct WorkoutSessionView: View {
         restTimer = TimeInterval(restTimeSeconds)
         restTimerManager = RestTimerManager(initialTime: restTimeSeconds) { [self] remainingTime in
             restTimer = remainingTime
+
+            // Alert at 5 seconds remaining
+            if Int(remainingTime) == 5 {
+                playSound(.restCountdownAlert)
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+            }
+
             if remainingTime <= 0 {
+                // Play sound when rest ends
+                playSound(.restComplete)
+
                 // Rest complete - smooth transition
                 withAnimation(.easeInOut(duration: 0.3)) {
                     isResting = false
@@ -384,6 +409,40 @@ struct WorkoutSessionView: View {
             }
         }
         restTimerManager?.start()
+    }
+
+    private func playSound(_ soundType: SoundType) {
+        let soundID: SystemSoundID
+        switch soundType {
+        case .restComplete:
+            // Subtle notification sound for rest completion
+            soundID = 1103 // Tink sound
+        case .workoutComplete:
+            // More prominent sound for workout completion
+            soundID = 1025 // Fanfare sound
+        case .setComplete:
+            // Set completed - positive feedback
+            soundID = 1104 // Pop sound
+        case .timerStart:
+            // Timer started - confirmation
+            soundID = 1105 // Swoosh sound
+        case .skipRest:
+            // Skipping rest - quick action
+            soundID = 1057 // SMS Received 1
+        case .restCountdownAlert:
+            // 5 seconds left in rest
+            soundID = 1106 // Tweet sound
+        }
+        AudioServicesPlaySystemSound(soundID)
+    }
+
+    enum SoundType {
+        case restComplete
+        case workoutComplete
+        case setComplete
+        case timerStart
+        case skipRest
+        case restCountdownAlert
     }
     
     private func skipRest() {

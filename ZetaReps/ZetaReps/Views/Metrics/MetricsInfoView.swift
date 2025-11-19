@@ -23,23 +23,35 @@ struct MetricsInfoView: View {
                         icon: "calendar.circle.fill",
                         iconColor: .green,
                         score: "0-10",
-                        description: "Measures how regularly you work out and complete target sets",
+                        description: "Measures how regularly you work out and meet volume targets over the last 3 weeks",
                         components: [
-                            ("Frequency", "60%", "Days worked out vs. expected (based on your weekly target). Exceeding target = full points."),
-                            ("Set Completion", "40%", "Percentage of workouts that complete both target sets and target reps per set.")
+                            ("Frequency", "80%", "Workouts per week vs. target, with exponential time decay (recent weeks count more)"),
+                            ("Quality", "20%", "Percentage of total volume (sets × reps) completed vs. target")
                         ],
                         formula: """
-                        Score = (Frequency × 60% + Set Completion × 40%) × 10
+                        Score = (Frequency × 80% + Quality × 20%) × 10
 
-                        Frequency:
-                        • workout_days / expected_days (capped at 1.0)
-                        • expected = (span_days ÷ 7) × target_days_per_week
-                        • Example: 14-day span, 3 days/week → expected = 6 days
+                        Time Weighting (3 weeks):
+                        • Week 1 (days 0-6): 100% weight (1.0)
+                        • Week 2 (days 7-13): 50% weight (0.5)
+                        • Week 3 (days 14-20): 25% weight (0.25)
+                        • Equivalent weeks = 1.75 (sum of weights)
 
-                        Set Completion:
-                        • workouts meeting both targets / total workouts
-                        • Needs: sets ≥ target AND reps_per_set ≥ 50% of target
-                        • Example: Target 3×10 → need ≥3 sets with ≥5 reps each
+                        Frequency (80%):
+                        • weighted_total = (count₁×1.0 + count₂×0.5 + count₃×0.25)
+                        • frequency_ratio = weighted_total / (target_days × 1.75)
+                        • Capped at 1.0 (exceeding target = full points)
+
+                        Quality (20%):
+                        • Per workout: quality = min(total_reps / target_total_reps, 1.0)
+                        • Examples (target: 3 sets × 10 reps = 30 total):
+                          - 15 reps → 15/30 = 0.5 (50% quality)
+                          - 30 reps → 30/30 = 1.0 (100% quality)
+                          - 45 reps → 45/30 = 1.5, capped at 1.0 (100% quality)
+                        • quality_avg_week = average quality across workouts that week
+                        • weighted_avg = (q₁×c₁×1.0 + q₂×c₂×0.5 + q₃×c₃×0.25) / weighted_total
+
+                        Note: Quality is based purely on total volume, regardless of how you split sets/reps.
                         """
                     )
 
@@ -49,31 +61,44 @@ struct MetricsInfoView: View {
                         icon: "bolt.circle.fill",
                         iconColor: .orange,
                         score: "0-10",
-                        description: "Measures how hard you're pushing yourself relative to your target sets and reps",
+                        description: "Measures how hard you're pushing yourself relative to targets over the last 3 weeks",
                         components: [
-                            ("Sets & Reps", "60%", "Combined evaluation: sets completion (60%) + reps per set (40%)"),
-                            ("Difficulty", "30%", "Your self-rated difficulty (1=easy, 5=hard), normalized to 0-1"),
-                            ("Volume Bonus", "10%", "Bonus for exceeding total target volume (sets × reps per set)")
+                            ("Volume", "60%", "Total volume (sets × reps) with bonus for higher reps per set"),
+                            ("Difficulty", "30%", "Your self-rated difficulty (1=easy, 5=hard), time-weighted average"),
+                            ("Volume Bonus", "10%", "Bonus for exceeding total target volume (capped at 50% above)")
                         ],
                         formula: """
-                        Score = (Sets & Reps × 60% + Difficulty × 30% + Volume Bonus × 10%) × 10
+                        Score = (Volume × 60% + Difficulty × 30% + Volume Bonus × 10%) × 10
 
-                        Sets & Reps (60%):
-                        • Sets Component (36%): avg_sets vs target_sets
-                          - <50% target = 0, ≥100% = 1.0, else linear
-                        • Reps Per Set (24%): avg_reps_per_set vs target
-                          - <50% target = 0, ≥100% = 1.0, else linear
-                        • Combined: (Sets × 60% + Reps × 40%)
+                        Time Weighting (same as Consistency):
+                        • Week 1: 100% (1.0), Week 2: 50% (0.5), Week 3: 25% (0.25)
+                        • All averages are exponentially-weighted across 3 weeks
+
+                        Volume (60%):
+                        • weighted_avg_total_reps = Σ(reps × weight) / Σ(weight)
+                        • weighted_avg_reps_per_set = Σ(reps × weight) / Σ(sets × weight)
+                        • volume_ratio = weighted_avg_total_reps / target_total_reps
+                        • volume_component = min(volume_ratio, 1.0)
+                        • reps_per_set_multiplier = min(max(avg_reps_per_set / target_reps_per_set, 0.5), 1.5)
+                        • base_score = volume_component × 80%
+                        • multiplier_effect = (reps_per_set_multiplier - 1.0) × volume_component × 20%
+                        • final = base_score + volume_component × 20% + multiplier_effect
+
+                        Examples (target: 3 sets × 10 reps = 30 total):
+                        • 3 sets × 10 reps = 30 → volume=1.0, rps_mult=1.0 → score=1.0
+                        • 2 sets × 15 reps = 30 → volume=1.0, rps_mult=1.5 → score=1.1
+                        • 1 set × 30 reps = 30 → volume=1.0, rps_mult=1.5 → score=1.1
 
                         Difficulty (30%):
-                        • (avg_difficulty - 1) ÷ 4
-                        • Range: 1 (easy) to 5 (hard) → normalized 0-1
+                        • weighted_avg_difficulty = Σ(difficulty × weight) / Σ(weight)
+                        • Normalized: (avg - 1) ÷ 4 (converts 1-5 to 0-1)
 
                         Volume Bonus (10%):
-                        • Bonus for exceeding target volume
-                        • Capped at 50% above target
+                        • If weighted_avg_total_reps > target_total_reps
+                        • excess_ratio = (achieved - target) / target (max 0.5)
+                        • bonus = excess_ratio × 0.2 (scales to 0-0.1 range)
 
-                        Note: Both sets quantity and reps per set quality are evaluated separately.
+                        Note: Higher reps per set (at same volume) gives slightly better intensity score.
                         """
                     )
 
@@ -111,75 +136,93 @@ struct DataPointsCard: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                
-                Text("Data Points Used")
+
+                Text("Time-Based Calculation")
                     .font(.headline)
                     .fontWeight(.bold)
             }
-            
+
             VStack(alignment: .leading, spacing: 12) {
-                Text("Metrics are calculated using your 3-10 most recent workouts:")
+                Text("Metrics are based on the last 3 weeks of workouts with exponential decay:")
                     .font(.subheadline)
                     .foregroundStyle(.primary)
-                
+
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: "1.circle.fill")
                             .font(.caption)
                             .foregroundStyle(.green)
-                        Text("Minimum: 3 workouts required")
+                        Text("This week (days 0-6): 100% weight")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: "2.circle.fill")
                             .font(.caption)
                             .foregroundStyle(.blue)
-                        Text("Maximum: 10 most recent workouts")
+                        Text("Last week (days 7-13): 50% weight")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "3.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.purple)
+                        Text("2 weeks ago (days 14-20): 25% weight")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.leading, 8)
-                
+
                 Divider()
                     .padding(.vertical, 4)
-                
-                Text("Why 3-10 data points?")
+
+                Text("Why exponential decay?")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .padding(.top, 4)
-                
-                Text("This range ensures metrics are:")
+
+                Text("This approach ensures your scores:")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 4)
-                
+
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                             .font(.caption)
                             .foregroundStyle(.blue)
-                        Text("Meaningful: Less than 3 workouts isn't enough for accurate analysis")
+                        Text("Reflect your current fitness level, not past performance")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                             .font(.caption)
                             .foregroundStyle(.blue)
-                        Text("Responsive: Recent workouts have the most impact on your scores")
+                        Text("Gradually decrease if you stop training (no sudden drops)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                             .font(.caption)
                             .foregroundStyle(.blue)
-                        Text("Stable: Up to 10 workouts prevents single outliers from skewing results")
+                        Text("Align with your weekly workout targets and training cycles")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                        Text("Match how fitness actually works (gradual deconditioning)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -192,7 +235,7 @@ struct DataPointsCard: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(Color(.systemBackground))
-                
+
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(
                         LinearGradient(

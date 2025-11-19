@@ -330,6 +330,9 @@ class DemoDataManager {
         case advanced // High consistency and volume
         case streakChaser // Perfect daily streak
         case inconsistent // Sporadic workouts
+        case weeklyDecay // Test 3-week exponential decay: Week 1 (5 workouts), Week 2 (3 workouts), Week 3 (1 workout)
+        case skipWeek // Test decay after break: Week 1 (0 workouts), Week 2 (5 workouts), Week 3 (5 workouts)
+        case recovery // Test recovery: Week 1 (3 workouts), Week 2 (0 workouts), Week 3 (0 workouts)
     }
 
     static func generateScenario(_ scenario: DemoScenario, context: ModelContext) {
@@ -407,9 +410,110 @@ class DemoDataManager {
                 let workout = Workout(
                     date: date,
                     duration: TimeInterval.random(in: 60...180),
+                    sets: Int.random(in: 2...4),
                     repsCompleted: Int.random(in: 15...40),
                     difficultyRating: Int.random(in: 2...5),
                     notes: ""
+                )
+                context.insert(workout)
+            }
+
+        case .weeklyDecay:
+            // Week 1 (0-6 days ago): 5 good workouts meeting targets
+            // Week 2 (7-13 days ago): 3 moderate workouts
+            // Week 3 (14-20 days ago): 1 workout
+            // Target: 5 days/week, 3 sets × 10 reps
+
+            // Week 1: Days 0, 1, 2, 4, 6
+            for daysAgo in [0, 1, 2, 4, 6] {
+                guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
+                let workout = Workout(
+                    date: date,
+                    duration: 180,
+                    sets: 3,
+                    repsCompleted: 30, // 3 sets × 10 reps (meets target)
+                    difficultyRating: 3,
+                    notes: "Week 1 - Meeting targets"
+                )
+                context.insert(workout)
+            }
+
+            // Week 2: Days 8, 10, 12
+            for daysAgo in [8, 10, 12] {
+                guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
+                let workout = Workout(
+                    date: date,
+                    duration: 150,
+                    sets: 3,
+                    repsCompleted: 24, // 3 sets × 8 reps (slightly below)
+                    difficultyRating: 3,
+                    notes: "Week 2 - Moderate"
+                )
+                context.insert(workout)
+            }
+
+            // Week 3: Day 16
+            guard let date3 = calendar.date(byAdding: .day, value: -16, to: now) else { break }
+            let workout3 = Workout(
+                date: date3,
+                duration: 120,
+                sets: 2,
+                repsCompleted: 20, // 2 sets × 10 reps
+                difficultyRating: 3,
+                notes: "Week 3 - Single workout"
+            )
+            context.insert(workout3)
+
+        case .skipWeek:
+            // Week 1 (0-6 days ago): 0 workouts (current break)
+            // Week 2 (7-13 days ago): 5 good workouts
+            // Week 3 (14-20 days ago): 5 good workouts
+            // Tests decay when you stop after consistent period
+
+            // Week 2: Days 7, 8, 9, 11, 13
+            for daysAgo in [7, 8, 9, 11, 13] {
+                guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
+                let workout = Workout(
+                    date: date,
+                    duration: 180,
+                    sets: 3,
+                    repsCompleted: 30,
+                    difficultyRating: 3,
+                    notes: "Week 2 - Consistent"
+                )
+                context.insert(workout)
+            }
+
+            // Week 3: Days 14, 15, 16, 18, 20
+            for daysAgo in [14, 15, 16, 18, 20] {
+                guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
+                let workout = Workout(
+                    date: date,
+                    duration: 180,
+                    sets: 3,
+                    repsCompleted: 30,
+                    difficultyRating: 3,
+                    notes: "Week 3 - Consistent"
+                )
+                context.insert(workout)
+            }
+
+        case .recovery:
+            // Week 1 (0-6 days ago): 3 workouts (recovering)
+            // Week 2 (7-13 days ago): 0 workouts (break)
+            // Week 3 (14-20 days ago): 0 workouts (break)
+            // Tests recovery after extended break
+
+            // Week 1: Days 1, 3, 5
+            for daysAgo in [1, 3, 5] {
+                guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
+                let workout = Workout(
+                    date: date,
+                    duration: 150,
+                    sets: 3,
+                    repsCompleted: 24, // 3 sets × 8 reps (building back up)
+                    difficultyRating: 4, // Feels harder after break
+                    notes: "Week 1 - Recovery mode"
                 )
                 context.insert(workout)
             }

@@ -512,7 +512,37 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                             
                             Divider()
-                            
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Metrics Simulator")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+
+                                NavigationLink(destination: MetricsSimulatorView()) {
+                                    HStack {
+                                        Image(systemName: "slider.horizontal.3")
+                                        Text("Interactive Simulator")
+                                            .fontWeight(.medium)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .padding()
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.blue.opacity(0.1))
+                                    )
+                                }
+                                .buttonStyle(.plain)
+
+                                Text("Adjust workouts per week to see how exponential decay affects metrics")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Divider()
+
                             VStack(spacing: 12) {
                                 Button("Test Reminder (5s)") {
                                     let impact = UIImpactFeedbackGenerator(style: .medium)
@@ -521,7 +551,7 @@ struct SettingsView: View {
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .tint(.blue)
-                                
+
                                 Button("Test Reminder (10s)") {
                                     let impact = UIImpactFeedbackGenerator(style: .medium)
                                     impact.impactOccurred()
@@ -529,7 +559,7 @@ struct SettingsView: View {
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .tint(.blue)
-                                
+
                                 Text("💡 Put app in background or lock simulator to see banner")
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)

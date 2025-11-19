@@ -74,64 +74,82 @@ class MetricsCalculator {
 
         // Edge case: no workouts
         guard !workouts.isEmpty else { return 0 }
-        
+
         // Edge case: invalid target
         guard targetDays > 0 && targetDays <= 7 else { return 0 }
 
-        // Get most recent workouts, limited to 10
-        let sortedWorkouts = workouts.sorted { $0.date > $1.date }
-        let dataPoints = Array(sortedWorkouts.prefix(10))
-        
-        // Edge case: need at least 3 workouts for meaningful metrics (as stated in info page)
-        guard dataPoints.count >= 3 else { return 0 }
-
         let calendar = Calendar.current
-        
-        // Calculate frequency: workout days vs expected days
-        // Calculate expected days based on data point span
-        let oldestDate = dataPoints.map { $0.date }.min() ?? Date()
-        let newestDate = dataPoints.map { $0.date }.max() ?? Date()
-        let spanDays = max(calendar.dateComponents([.day], from: oldestDate, to: newestDate).day ?? 1, 1)
-        let workoutDays = Set(dataPoints.map {
-            calendar.startOfDay(for: $0.date)
-        }).count
+        let now = Date()
 
-        // Calculate expected workout days in this span based on target frequency
-        // For example: if span is 7 days and target is 1 day/week, expected = 1
-        //              if span is 7 days and target is 5 days/week, expected = 5
-        let expectedDays = max(Double(spanDays) / 7.0 * Double(targetDays), 1.0)
-        
-        // Edge case: prevent division by zero
-        guard expectedDays > 0 else { return 0 }
-        
-        // Frequency score: workoutDays / expectedDays, capped at 1.0 (60% weight)
-        // If user exceeds target, they get full points (1.0)
-        // If user meets exactly target, they get full points (1.0)
-        // If user is below target, score is proportional
-        let frequencyScore = min(Double(workoutDays) / expectedDays, 1.0)
-        
-        // Set completion evaluation (40% weight): Check if workouts complete target sets AND reps per set
-        var setCompletionScore: Double = 1.0
-        if let targetSets = targetSets, targetSets > 0 {
-            // Check both: sets completion AND reps per set (if available)
-            if let targetRepsPerSet = targetRepsPerSet, targetRepsPerSet > 0 {
-                // Integrated check: workout must meet both sets AND reps per set targets
-                let workoutsMeetingTargets = dataPoints.filter { workout in
-                    let repsPerSet = workout.sets > 0 ? Double(workout.repsCompleted) / Double(workout.sets) : 0
-                    return workout.sets >= targetSets && repsPerSet >= Double(targetRepsPerSet) * 0.5 // At least 50% of target reps per set
-                }.count
-                let setCompletionRatio = Double(workoutsMeetingTargets) / Double(dataPoints.count)
-                setCompletionScore = setCompletionRatio // 0-1 range
-            } else {
-                // Fallback: just check sets
-                let workoutsWithTargetSets = dataPoints.filter { $0.sets >= targetSets }.count
-                let setCompletionRatio = Double(workoutsWithTargetSets) / Double(dataPoints.count)
-                setCompletionScore = setCompletionRatio
+        // Filter workouts to last 21 days (3 weeks)
+        let sortedWorkouts = workouts.sorted { $0.date > $1.date }
+        let threeWeeksAgo = calendar.date(byAdding: .day, value: -21, to: now) ?? now
+        let recentWorkouts = sortedWorkouts.filter { $0.date >= threeWeeksAgo }
+
+        // Edge case: need at least 1 workout for meaningful metrics
+        guard !recentWorkouts.isEmpty else { return 0 }
+
+        // Split into 3 weeks with exponential weights: 1.0, 0.5, 0.25
+        let oneWeekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now) ?? now
+
+        let week1 = recentWorkouts.filter { $0.date >= oneWeekAgo }      // Last 7 days, weight = 1.0
+        let week2 = recentWorkouts.filter { $0.date >= twoWeeksAgo && $0.date < oneWeekAgo }  // Days 7-13, weight = 0.5
+        let week3 = recentWorkouts.filter { $0.date >= threeWeeksAgo && $0.date < twoWeeksAgo }  // Days 14-20, weight = 0.25
+
+        // FREQUENCY SCORE (80% weight)
+        // Count workouts per week
+        let count1 = Double(week1.count)
+        let count2 = Double(week2.count)
+        let count3 = Double(week3.count)
+
+        // Apply exponential weights: each week worth half the previous
+        let weightedTotal = (count1 * 1.0) + (count2 * 0.5) + (count3 * 0.25)
+
+        // Normalize by target frequency across equivalent weeks
+        // Sum of weights = 1.0 + 0.5 + 0.25 = 1.75 weeks equivalent
+        let equivalentWeeks = 1.75
+        let frequencyRatio = weightedTotal / (Double(targetDays) * equivalentWeeks)
+        let frequencyScore = min(frequencyRatio, 1.0) * 0.8
+
+        // QUALITY SCORE (20% weight): Based on total volume (sets × reps) vs target volume
+        var qualityScore: Double = 0.2  // Default to full quality if no targets set
+
+        if let targetSets = targetSets, targetSets > 0,
+           let targetRepsPerSet = targetRepsPerSet, targetRepsPerSet > 0 {
+
+            let targetTotalReps = targetSets * targetRepsPerSet
+
+            // Helper function: calculate quality score for a workout (0.0 to 1.0)
+            let calculateWorkoutQuality: (Workout) -> Double = { workout in
+                let totalReps = workout.repsCompleted
+
+                // Volume ratio: actual total reps vs target total reps, capped at 100%
+                let volumeRatio = min(Double(totalReps) / Double(targetTotalReps), 1.0)
+
+                return volumeRatio
             }
+
+            // Calculate weighted average quality across all weeks
+            let quality1 = week1.isEmpty ? 0.0 : week1.map(calculateWorkoutQuality).reduce(0, +) / Double(week1.count)
+            let quality2 = week2.isEmpty ? 0.0 : week2.map(calculateWorkoutQuality).reduce(0, +) / Double(week2.count)
+            let quality3 = week3.isEmpty ? 0.0 : week3.map(calculateWorkoutQuality).reduce(0, +) / Double(week3.count)
+
+            // Weighted average quality with exponential weights
+            let weightedQuality: Double
+            if weightedTotal > 0 {
+                weightedQuality = (quality1 * count1 * 1.0 +
+                                   quality2 * count2 * 0.5 +
+                                   quality3 * count3 * 0.25) / weightedTotal
+            } else {
+                weightedQuality = 0
+            }
+
+            qualityScore = weightedQuality * 0.2
         }
-        
-        // Combine: 60% frequency + 40% set completion
-        let combinedScore = (frequencyScore * 0.6) + (setCompletionScore * 0.4)
+
+        // Combine: 80% frequency + 20% quality
+        let combinedScore = frequencyScore + qualityScore
 
         // Scale to 0-10
         return min(max(combinedScore * 10.0, 0), 10)
@@ -267,7 +285,7 @@ class MetricsCalculator {
     // MARK: - Intensity Calculation
 
     /// Calculate intensity score (0-10) based on reps, sets, and difficulty normalized by target
-    /// Uses 3-10 most recent workouts for calculation
+    /// Uses 3-week exponential decay: recent workouts weighted more (1.0, 0.5, 0.25)
     /// - Parameters:
     ///   - workouts: All workout records (will be sorted by date, most recent first)
     ///   - targetReps: Target total reps per workout (sets × reps per set, used for normalization)
@@ -278,58 +296,93 @@ class MetricsCalculator {
     static func calculateIntensity(workouts: [Workout], targetReps: Int = 20, targetSets: Int? = nil, targetRepsPerSet: Int? = nil, evaluationPeriod: Int = 30) -> Double {
         // Edge case: no workouts
         guard !workouts.isEmpty else { return 0 }
-        
+
         // Edge case: invalid target
         guard targetReps > 0 else { return 0 }
-        
-        // Get most recent workouts, limited to 10
-        let sortedWorkouts = workouts.sorted { $0.date > $1.date }
-        let dataPoints = Array(sortedWorkouts.prefix(10))
-        
-        // Edge case: need at least 3 workouts for meaningful metrics (as stated in info page)
-        guard dataPoints.count >= 3 else { return 0 }
 
-        // Factor 1: Sets and reps combined evaluation (60% weight if sets info available, otherwise just reps)
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Filter workouts to last 21 days (3 weeks)
+        let sortedWorkouts = workouts.sorted { $0.date > $1.date }
+        let threeWeeksAgo = calendar.date(byAdding: .day, value: -21, to: now) ?? now
+        let recentWorkouts = sortedWorkouts.filter { $0.date >= threeWeeksAgo }
+
+        // Edge case: need at least 1 workout for meaningful metrics
+        guard !recentWorkouts.isEmpty else { return 0 }
+
+        // Split into 3 weeks with exponential weights: 1.0, 0.5, 0.25
+        let oneWeekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now) ?? now
+
+        let week1 = recentWorkouts.filter { $0.date >= oneWeekAgo }      // Last 7 days, weight = 1.0
+        let week2 = recentWorkouts.filter { $0.date >= twoWeeksAgo && $0.date < oneWeekAgo }  // Days 7-13, weight = 0.5
+        let week3 = recentWorkouts.filter { $0.date >= threeWeeksAgo && $0.date < twoWeeksAgo }  // Days 14-20, weight = 0.25
+
+        // Helper function: calculate exponentially-weighted average
+        let calculateWeightedAvg: ([Workout], KeyPath<Workout, Int>) -> Double = { workouts, keyPath in
+            let sum1 = Double(week1.map { $0[keyPath: keyPath] }.reduce(0, +)) * 1.0
+            let sum2 = Double(week2.map { $0[keyPath: keyPath] }.reduce(0, +)) * 0.5
+            let sum3 = Double(week3.map { $0[keyPath: keyPath] }.reduce(0, +)) * 0.25
+
+            let count1 = Double(week1.count) * 1.0
+            let count2 = Double(week2.count) * 0.5
+            let count3 = Double(week3.count) * 0.25
+
+            let totalWeight = count1 + count2 + count3
+            return totalWeight > 0 ? (sum1 + sum2 + sum3) / totalWeight : 0
+        }
+
+        // FACTOR 1: Volume-based evaluation (60% weight)
+        // Base score on total volume, with bonus for higher reps per set
         var setsRepsScore: Double = 0.0
-        
+
         if let targetSets = targetSets, let targetRepsPerSet = targetRepsPerSet, targetSets > 0 && targetRepsPerSet > 0 {
-            // Integrated approach: evaluate both sets AND reps per set
-            let avgSets = Double(dataPoints.map { $0.sets }.reduce(0, +)) / Double(dataPoints.count)
-            
-            // Calculate average reps per set correctly: sum of (reps / sets) for each workout, then average
-            let totalReps = dataPoints.map { $0.repsCompleted }.reduce(0, +)
-            let totalSets = dataPoints.map { max($0.sets, 1) }.reduce(0, +)
-            let avgRepsPerSet = totalSets > 0 ? Double(totalReps) / Double(totalSets) : 0.0
-            
-            // Normalize sets: 50%-100% of target
-            let setsRatio = avgSets / Double(targetSets)
-            let setsComponent: Double
-            if setsRatio < 0.5 {
-                setsComponent = 0.0
-            } else if setsRatio >= 1.0 {
-                setsComponent = 1.0
-            } else {
-                setsComponent = (setsRatio - 0.5) / 0.5
-            }
-            
-            // Normalize reps per set: 50%-100% of target
-            let repsPerSetRatio = avgRepsPerSet / Double(targetRepsPerSet)
-            let repsPerSetComponent: Double
-            if repsPerSetRatio < 0.5 {
-                repsPerSetComponent = 0.0
-            } else if repsPerSetRatio >= 1.0 {
-                repsPerSetComponent = 1.0
-            } else {
-                repsPerSetComponent = (repsPerSetRatio - 0.5) / 0.5
-            }
-            
-            // Combined: 60% sets + 40% reps per set (both must be good for full score)
-            setsRepsScore = (setsComponent * 0.6) + (repsPerSetComponent * 0.4)
+            let targetTotalReps = targetSets * targetRepsPerSet
+
+            // Calculate weighted average total reps
+            let weightedAvgTotalReps = calculateWeightedAvg(recentWorkouts, \.repsCompleted)
+
+            // Calculate weighted average reps per set
+            let totalWeightedReps1 = week1.map { $0.repsCompleted }.reduce(0, +)
+            let totalWeightedSets1 = week1.map { max($0.sets, 1) }.reduce(0, +)
+            let totalWeightedReps2 = week2.map { $0.repsCompleted }.reduce(0, +)
+            let totalWeightedSets2 = week2.map { max($0.sets, 1) }.reduce(0, +)
+            let totalWeightedReps3 = week3.map { $0.repsCompleted }.reduce(0, +)
+            let totalWeightedSets3 = week3.map { max($0.sets, 1) }.reduce(0, +)
+
+            let weightedAvgRepsPerSet: Double = {
+                let weightedRepsSum = (Double(totalWeightedReps1) * 1.0 +
+                                       Double(totalWeightedReps2) * 0.5 +
+                                       Double(totalWeightedReps3) * 0.25)
+                let weightedSetsSum = (Double(totalWeightedSets1) * 1.0 +
+                                       Double(totalWeightedSets2) * 0.5 +
+                                       Double(totalWeightedSets3) * 0.25)
+                return weightedSetsSum > 0 ? weightedRepsSum / weightedSetsSum : 0
+            }()
+
+            // Base volume score: 80% weight on total volume
+            let volumeRatio = weightedAvgTotalReps / Double(targetTotalReps)
+            let volumeComponent = min(volumeRatio, 1.0)
+
+            // Reps per set multiplier: 20% weight
+            // This scales from 0.5 (if reps/set is 50% of target) to 1.5 (if reps/set is 150% of target)
+            // At exactly target reps/set: multiplier = 1.0 (neutral)
+            // Below target: multiplier < 1.0 (reduces score)
+            // Above target: multiplier > 1.0 (increases score)
+            let repsPerSetRatio = weightedAvgRepsPerSet / Double(targetRepsPerSet)
+            let repsPerSetMultiplier = min(max(repsPerSetRatio, 0.5), 1.5)
+
+            // Combined: volume score × reps per set multiplier
+            // Then apply 80% to volume base, 20% to the multiplier effect
+            let baseScore = volumeComponent * 0.8
+            let multiplierEffect = (repsPerSetMultiplier - 1.0) * volumeComponent * 0.2
+
+            setsRepsScore = baseScore + volumeComponent * 0.2 + multiplierEffect
         } else {
             // Fallback: use total reps if sets info not available
-            let avgReps = Double(dataPoints.map { $0.repsCompleted }.reduce(0, +)) / Double(dataPoints.count)
-            guard targetReps > 0 else { return 0 }
-            let repsRatio = avgReps / Double(targetReps)
+            let weightedAvgReps = calculateWeightedAvg(recentWorkouts, \.repsCompleted)
+            let repsRatio = weightedAvgReps / Double(targetReps)
             if repsRatio < 0.5 {
                 setsRepsScore = 0.0
             } else if repsRatio >= 1.0 {
@@ -339,22 +392,21 @@ class MetricsCalculator {
             }
         }
 
-        // Factor 2: Difficulty rating (30% weight)
-        let avgDifficulty = dataPoints.map { Double($0.difficultyRating) }
-            .reduce(0, +) / Double(dataPoints.count)
-        
+        // FACTOR 2: Difficulty rating (30% weight)
+        let weightedAvgDifficulty = calculateWeightedAvg(recentWorkouts, \.difficultyRating)
+
         // Edge case: ensure difficulty is in valid range [1, 5]
-        let clampedDifficulty = min(max(avgDifficulty, 1.0), 5.0)
+        let clampedDifficulty = min(max(weightedAvgDifficulty, 1.0), 5.0)
         let difficultyScore = (clampedDifficulty - 1.0) / 4.0  // Normalize from 1-5 to 0-1
 
-        // Factor 3: Total volume bonus (10% weight) - rewards doing more than minimum
+        // FACTOR 3: Total volume bonus (10% weight) - rewards exceeding targets
         var volumeBonus: Double = 0.0
         if let targetSets = targetSets, let targetRepsPerSet = targetRepsPerSet {
-            let avgTotalReps = Double(dataPoints.map { $0.repsCompleted }.reduce(0, +)) / Double(dataPoints.count)
+            let weightedAvgTotalReps = calculateWeightedAvg(recentWorkouts, \.repsCompleted)
             let targetTotalReps = Double(targetSets * targetRepsPerSet)
-            if avgTotalReps > targetTotalReps {
+            if weightedAvgTotalReps > targetTotalReps {
                 // Bonus up to 10% for exceeding target (capped at 50% above target)
-                let excessRatio = min((avgTotalReps - targetTotalReps) / targetTotalReps, 0.5)
+                let excessRatio = min((weightedAvgTotalReps - targetTotalReps) / targetTotalReps, 0.5)
                 volumeBonus = excessRatio * 0.2 // 0.0 to 0.1 (10%)
             }
         }

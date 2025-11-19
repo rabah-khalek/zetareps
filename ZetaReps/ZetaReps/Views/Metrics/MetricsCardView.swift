@@ -236,30 +236,36 @@ struct GlassmorphicMetricsCard: View {
     var body: some View {
         VStack(spacing: 16) {
             // Header
-            HStack {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.title2)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.title2)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
 
-                Text("Performance Metrics")
-                    .font(.title3)
-                    .fontWeight(.bold)
-
-                Spacer()
-
-                Button(action: {
-                    showingInfo = true
-                }) {
-                    Image(systemName: "info.circle")
+                    Text("Performance Metrics")
                         .font(.title3)
-                        .foregroundStyle(.blue)
+                        .fontWeight(.bold)
+
+                    Spacer()
+
+                    Button(action: {
+                        showingInfo = true
+                    }) {
+                        Image(systemName: "info.circle")
+                            .font(.title3)
+                            .foregroundStyle(.blue)
+                    }
                 }
+
+                Text("Based on last 3 weeks, recent workouts count more")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .padding(.bottom, 4)
 

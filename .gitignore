@@ -6,3 +6,9 @@ xcuserdata/
 *.xcuserstate
 DerivedData/
 build/
+
+# Backups, archives, tool caches
+*.bak*
+*.xcarchive
+__pycache__/
+.venv/

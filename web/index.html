@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZetaReps - Build Your Push-Up Habit</title>
+    <meta name="description"
+        content="Track sets, monitor progress, and stay consistent with smart reminders. Push-up workout tracker for iOS with performance metrics.">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="manifest" href="site.webmanifest">
+
+    <!-- Umami Analytics - Privacy-friendly website analytics -->
+    <script defer src="https://cloud.umami.is/script.js"
+        data-website-id="04820e2b-beea-40ed-9e1e-30cece0ab0c7"></script>
+
+    <style>
+        :root {
+            --color-bg: #000000;
+            --color-bg-secondary: #0a0a0a;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #888888;
+            --color-text-tertiary: #666666;
+            --color-accent: #EE220C;
+            --color-accent-hover: #FF3320;
+            --color-border: #1a1a1a;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 48px;
+            --spacing-xl: 80px;
+            --spacing-2xl: 120px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: var(--color-text-primary);
+            background: var(--color-bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            scroll-padding-top: 40px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--color-border);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-image {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+        }
+
+        nav ul {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        nav a:hover {
+            color: var(--color-text-primary);
+        }
+
+        nav a:not(.btn-download-nav)::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        nav a:not(.btn-download-nav) {
+            position: relative;
+        }
+
+        nav a:not(.btn-download-nav):hover::after {
+            transform: scaleX(1);
+        }
+
+        .btn-download-nav {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .btn-download-nav:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(238, 34, 12, 0.12), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px var(--spacing-md) 40px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(238, 34, 12, 0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            gap: clamp(16px, 2.5vh, 28px);
+        }
+
+
+        .hero-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(14px, 1.8vh, 22px);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .hero-app-icon {
+            width: clamp(56px, 7vw, 80px);
+            height: clamp(56px, 7vw, 80px);
+            border-radius: clamp(14px, 1.8vw, 20px);
+            box-shadow: 0 20px 60px rgba(238, 34, 12, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease-out 0.1s backwards, float 4s ease-in-out 1.4s infinite;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            padding: 3px;
+            position: relative;
+            cursor: pointer;
+            display: block;
+        }
+
+        .hero-app-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: calc(clamp(14px, 1.8vw, 20px) - 3px);
+            display: block;
+        }
+
+        .hero-app-icon:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 28px 80px rgba(238, 34, 12, 0.35),
+                0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+
+        .download-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: clamp(24px, 3vw, 32px);
+            height: clamp(24px, 3vw, 32px);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--color-bg);
+        }
+
+        .download-badge svg {
+            width: 50%;
+            height: 50%;
+        }
+
+        .hero-text {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(6px, 1vh, 10px);
+            align-items: flex-start;
+        }
+
+
+        .hero h1 {
+            font-size: clamp(36px, 5.5vw, 64px);
+            font-weight: 700;
+            line-height: 1;
+            margin: 0;
+            letter-spacing: -0.05em;
+            animation: fadeInUp 0.7s ease-out 0.2s backwards;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(15px, 1.8vw, 19px);
+            color: var(--color-text-secondary);
+            font-weight: 400;
+            line-height: 1.3;
+            margin: 0;
+            animation: fadeInUp 0.7s ease-out 0.3s backwards;
+        }
+
+
+        .hero-demo {
+            width: 100%;
+            flex-shrink: 1;
+            min-height: 0;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            margin-top: 0;
+            padding-bottom: 20px;
+        }
+
+        .screenshots-carousel {
+            width: 100vw;
+            max-width: none;
+            overflow: hidden;
+            position: relative;
+            height: clamp(400px, 60vh, 800px);
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+        }
+
+        .screenshots-track {
+            display: inline-flex;
+            height: 100%;
+            align-items: center;
+            animation: scroll-horizontal 50s linear infinite;
+            will-change: transform;
+        }
+
+        .screenshot-wrapper {
+            flex-shrink: 0;
+            height: 95%;
+            position: relative;
+            padding: 6px;
+            margin-right: var(--spacing-sm);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 24px;
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.08),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screenshots-track > .screenshot-wrapper:nth-child(10) {
+            margin-right: 0;
+        }
+
+        .screenshot {
+            width: auto;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 20px;
+            background: #000000;
+            position: relative;
+        }
+
+        @keyframes scroll-horizontal {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+
+        /* Section */
+        section {
+            padding: var(--spacing-xl) var(--spacing-md);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .section-subtitle {
+            font-size: clamp(16px, 2.5vw, 18px);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-lg);
+            max-width: 700px;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .feature-card {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(238, 34, 12, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(238, 34, 12, 0.06);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .feature-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--color-text-secondary);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .feature-card p {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .feature-card p strong {
+            color: var(--color-text-primary);
+            font-weight: 500;
+        }
+
+        /* Highlight Section */
+        .highlight-section {
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin: var(--spacing-xl) 0;
+        }
+
+        .highlight-content {
+            max-width: 600px;
+        }
+
+        .highlight-content h3 {
+            font-size: clamp(28px, 5vw, 40px);
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .highlight-content p {
+            color: var(--color-text-secondary);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* Pricing */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .pricing-options-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md) var(--spacing-md) 12px;
+        }
+
+        .pricing-option-compact {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .pricing-option-compact:hover {
+            border-color: rgba(238, 34, 12, 0.25);
+            background: #0f0f0f;
+            box-shadow: 0 0 0 1px rgba(238, 34, 12, 0.1);
+        }
+
+        .pricing-option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .pricing-option-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .pricing-option-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .pricing-option-period {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .pricing-option-savings {
+            display: inline-block;
+            background: rgba(192, 72, 133, 0.15);
+            color: var(--color-accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .pricing-features-panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        .pricing-features-panel h3 {
+            margin: 0 0 var(--spacing-md) 0;
+            font-size: 16px;
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+
+        .features-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .features-column:first-child {
+            border-right: 1px solid var(--color-border);
+            padding-right: var(--spacing-lg);
+        }
+
+        .pricing-features-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .pricing-features-list li {
+            padding: 10px 0;
+            padding-left: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .pricing-features-list li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .pricing-cta {
+            margin-top: var(--spacing-md);
+            text-align: center;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--color-border);
+            padding: var(--spacing-md) var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a {
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-text-primary);
+        }
+
+        .footer-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .footer-note {
+            font-size: 14px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-container {
+                gap: clamp(14px, 2vh, 24px);
+            }
+
+            .hero-demo {
+                max-width: 650px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                height: auto;
+                min-height: 100vh;
+                padding: 100px var(--spacing-md) 32px;
+            }
+
+            .hero-container {
+                gap: clamp(16px, 2.5vh, 24px);
+            }
+
+            .hero-header {
+                gap: clamp(12px, 1.8vh, 18px);
+            }
+
+            .hero-app-icon {
+                width: clamp(56px, 14vw, 72px);
+                height: clamp(56px, 14vw, 72px);
+            }
+
+            .hero h1 {
+                font-size: clamp(32px, 8vw, 48px);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(15px, 4vw, 18px);
+            }
+
+            .hero-demo {
+                width: 100%;
+            }
+
+            .screenshots-carousel {
+                height: clamp(300px, 50vh, 600px);
+            }
+
+            .screenshot-wrapper {
+                padding: 5px;
+                border-radius: 20px;
+            }
+
+            .screenshot {
+                border-radius: 18px;
+            }
+
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-features-panel {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
+            }
+
+            .features-column:first-child {
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                padding-right: 0;
+                padding-bottom: var(--spacing-md);
+            }
+
+            nav ul {
+                gap: var(--spacing-sm);
+            }
+
+            nav a {
+                font-size: 14px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-height: 800px) {
+            .hero {
+                padding: 90px var(--spacing-md) 32px;
+            }
+
+            .hero-container {
+                gap: 14px;
+            }
+
+            .hero-header {
+                gap: 12px;
+            }
+
+            .hero-app-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            .hero h1 {
+                font-size: clamp(32px, 5vw, 52px);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(14px, 1.6vw, 17px);
+            }
+
+            .hero-demo {
+                margin-top: var(--spacing-md);
+            }
+        }
+
+        @media (max-height: 700px) {
+            .hero {
+                padding: 80px var(--spacing-md) 24px;
+            }
+
+            .hero-container {
+                gap: 12px;
+            }
+
+            .hero-header {
+                gap: 10px;
+            }
+
+            .hero-app-icon {
+                width: 52px;
+                height: 52px;
+            }
+
+            .hero h1 {
+                font-size: clamp(28px, 4.5vw, 48px);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(13px, 1.5vw, 16px);
+            }
+
+            .hero-demo {
+                margin-top: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="logo.png" alt="ZetaReps" class="logo-image">
+                <span>ZetaReps</span>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Free &amp; Open Source</a></li>
+                    <li><a href="mailto:rabah.khalek@gmail.com">Contact</a></li>
+                    <li><a href="https://apps.apple.com/app/zetareps/id6754805460" class="btn-download-nav" target="_blank"
+                            rel="noopener" data-umami-event="nav-download-click">
+                            <svg width="14" height="14" viewBox="0 0 170 170" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
+                                <path
+                                    d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"
+                                    fill="#000" />
+                            </svg>
+                            Download</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-header">
+                <a href="https://apps.apple.com/app/zetareps/id6754805460" target="_blank" rel="noopener" data-umami-event="hero-icon-download-click">
+                    <div class="hero-app-icon">
+                        <img src="logo.png" alt="ZetaReps App Icon">
+                        <div class="download-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+
+                <div class="hero-text">
+                    <h1>Build your push-up habit.</h1>
+                    <p class="hero-subtitle">Track sets, monitor progress, and stay consistent with smart reminders.</p>
+                </div>
+            </div>
+
+            <div class="hero-demo">
+                <div class="screenshots-carousel">
+                    <div class="screenshots-track">
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot1.png" alt="ZetaReps Screenshot 1" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot2.png" alt="ZetaReps Screenshot 2" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot3.png" alt="ZetaReps Screenshot 3" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot4.png" alt="ZetaReps Screenshot 4" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot5.png" alt="ZetaReps Screenshot 5" class="screenshot">
+                        </div>
+                        <!-- Duplicate for seamless infinite loop -->
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot1.png" alt="ZetaReps Screenshot 1" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot2.png" alt="ZetaReps Screenshot 2" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot3.png" alt="ZetaReps Screenshot 3" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot4.png" alt="ZetaReps Screenshot 4" class="screenshot">
+                        </div>
+                        <div class="screenshot-wrapper">
+                            <img src="screenshots/screenshot5.png" alt="ZetaReps Screenshot 5" class="screenshot">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <h2 class="section-title">Features.</h2>
+        <p class="section-subtitle">Track your push-up workouts with set-based training, performance metrics, and smart notifications. All data stored on your device.</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <h3>Set-Based Tracking</h3>
+                </div>
+                <p>Track <strong>sets, reps, and rest periods</strong> with automatic rest timer between sets.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Performance Metrics</h3>
+                </div>
+                <p><strong>Consistency & Intensity scores</strong> (0-10) track your workout frequency and quality.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Fitness Level Targets</h3>
+                </div>
+                <p>Choose your <strong>fitness level</strong> for auto-calculated workout targets.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Smart Notifications</h3>
+                </div>
+                <p><strong>Context-aware reminders</strong> respect rest days and recent workouts.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <h3>Streak Tracking</h3>
+                </div>
+                <p>Track consistency with <strong>rest day support</strong> and 2-day gap tolerance.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                    </div>
+                    <h3>Progress Charts</h3>
+                </div>
+                <p><strong>Visualize metrics & reps</strong> with scrollable charts and performance bands.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                        </svg>
+                    </div>
+                    <h3>Difficulty Rating</h3>
+                </div>
+                <p>Rate each workout on a <strong>1-5 scale</strong> to track intensity trends.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                        </svg>
+                    </div>
+                    <h3>Rest Timer</h3>
+                </div>
+                <p><strong>Automatic rest periods</strong> between sets with skip option for flexibility.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3>Personal Records</h3>
+                </div>
+                <p>Track your <strong>best workout, longest streak</strong>, and total pushups.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Free & Open Source Section -->
+    <section id="pricing">
+        <h2 class="section-title">Free.</h2>
+        <p class="section-subtitle">ZetaReps is now completely free and open source. The 100-pushup limit and the Premium
+            subscription are&nbsp;gone.</p>
+
+        <div class="pricing-grid">
+            <div class="pricing-options-compact">
+                <div class="pricing-option-compact">
+                    <div class="pricing-option-header">
+                        <span class="pricing-option-name">Everything</span>
+                        <span class="pricing-option-price">$0</span>
+                    </div>
+                    <div class="pricing-option-period">No subscription, no limits</div>
+                </div>
+            </div>
+
+            <div class="pricing-features-panel">
+                <div class="features-column">
+                    <h3>Included</h3>
+                    <ul class="pricing-features-list">
+                        <li>Unlimited pushups and workouts</li>
+                        <li>Set-based workout tracking</li>
+                        <li>Performance metrics &amp; full history</li>
+                        <li>Smart notifications</li>
+                        <li>Calendar view &amp; streak tracking</li>
+                        <li>Difficulty rating</li>
+                        <li>Rest day support</li>
+                    </ul>
+                </div>
+
+                <div class="features-column">
+                    <h3>Project status</h3>
+                    <p style="color: var(--color-text-secondary); font-size: 15px; line-height: 1.6; margin: 0 0 var(--spacing-md) 0;">
+                        ZetaReps is <strong style="color: var(--color-text-primary);">no longer actively maintained</strong>.
+                        Version 1.0.4 is the final release: it removes the subscription and unlocks everything.
+                        The App Store listing is available until late October 2026; installed copies keep working after that.
+                        The source code is published under the MIT license, so anyone can build it with Xcode or improve it.
+                    </p>
+
+                    <div class="pricing-cta">
+                        <a href="https://github.com/rabah-khalek/zetareps" class="btn-download-nav" target="_blank"
+                            rel="noopener" data-umami-event="github-cta-click">
+                            View source on GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy</a>
+                <a href="terms.html">Terms</a>
+                <a href="mailto:rabah.khalek@gmail.com">Support</a>
+            </div>
+            <p class="footer-note">© 2025 ZetaReps. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Enhanced smooth scroll with offset for fixed header
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get all anchor links
+            const links = document.querySelectorAll('a[href^="#"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+
+                    // Skip if it's just "#" or empty
+                    if (!href || href === '#') return;
+
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        e.preventDefault();
+
+                        // Calculate offset for fixed header
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const offset = headerHeight - 40; // Less offset to reduce top gap
+
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                        // Smooth scroll with easing
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+
+                        // Update URL without jumping
+                        if (history.pushState) {
+                            history.pushState(null, null, href);
+                        }
+                    }
+                });
+            });
+
+            // Handle direct navigation (e.g., from URL with hash)
+            if (window.location.hash) {
+                setTimeout(function () {
+                    const targetId = window.location.hash.substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const offset = headerHeight - 40;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 100);
+            }
+
+            // Screenshots now use CSS animation for infinite scrolling
+        });
+    </script>
+</body>
+
+</html>

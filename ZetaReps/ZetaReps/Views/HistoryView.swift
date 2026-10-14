@@ -18,7 +18,6 @@ struct HistoryView: View {
     @State private var selectedTimeRange: TimeRange = .week
     @State private var showingDeleteAlert = false
     @State private var workoutToDelete: Workout?
-    @State private var showingPaywall = false
     @State private var showingWorkout = false
     @State private var selectedWorkoutForDetail: Workout?
 
@@ -92,9 +91,6 @@ struct HistoryView: View {
                 }
             } message: {
                 Text("Are you sure you want to delete this workout?")
-            }
-            .sheet(isPresented: $showingPaywall) {
-                PaywallView(milestone: nil)
             }
             .sheet(item: $selectedWorkoutForDetail) { workout in
                 WorkoutDetailView(workout: workout)

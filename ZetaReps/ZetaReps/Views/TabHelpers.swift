@@ -9,7 +9,6 @@ import SwiftUI
 
 struct StartTabView: View {
     @Binding var showingWorkout: Bool
-    @Binding var showingPaywall: Bool
     @Binding var selectedTab: Int
     
     var body: some View {

@@ -33,9 +33,7 @@ struct SettingsView: View {
     @State private var pendingNotificationCount = 0
     @State private var showingCustomTimePicker = false
     @State private var newCustomTime = DateComponents(hour: 12, minute: 0)
-    @State private var showingPaywall = false
     @State private var showingWorkout = false
-    @State private var isRestoring = false
     @State private var showingScheduleBuilder = false
     @State private var showingRecommendedStandardsInfo = false
     
@@ -323,146 +321,86 @@ struct SettingsView: View {
                     )
                     .padding(.horizontal, 20)
 
-                    // Subscription Section
+                    // Free app notice
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Image(systemName: "crown.fill")
+                            Image(systemName: "heart.fill")
                                 .font(.title3)
                                 .foregroundStyle(
                                     LinearGradient(
-                                        colors: [.yellow, .orange],
+                                        colors: [.pink, .orange],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                            Text("Subscription")
+                            Text("ZetaReps is free")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                         }
                         .padding(.bottom, 4)
-                        
-                        VStack(spacing: 16) {
-                            if subscriptionManager.isSubscribed {
-                                HStack(spacing: 12) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(
-                                                LinearGradient(
-                                                    colors: [.green.opacity(0.15), .green.opacity(0.1)],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                            .frame(width: 48, height: 48)
-                                        
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(.green)
-                                            .font(.title2)
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Premium Active")
-                                            .font(.body)
-                                            .fontWeight(.semibold)
-                                        Text("All features unlocked")
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    
-                                    Spacer()
-                                }
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color(.secondarySystemBackground))
-                                )
 
-                                HStack(spacing: 12) {
-                                    Button(action: {
-                                        openSubscriptionManagement()
-                                    }) {
-                                        Text("Manage Subscription")
-                                            .font(.subheadline)
-                                            .fontWeight(.medium)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .fill(Color(.systemGray6))
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                    Button(action: {
-                                        restorePurchases()
-                                    }) {
-                                        Text("Restore Purchases")
-                                            .font(.subheadline)
-                                            .fontWeight(.medium)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .fill(Color(.systemGray6))
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .disabled(isRestoring)
-                                }
-                            } else {
-                                VStack(spacing: 12) {
-                                    Button(action: {
-                                        showingPaywall = true
-                                    }) {
-                                        Text("Upgrade to Premium")
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundStyle(.white)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .fill(
-                                                        LinearGradient(
-                                                            colors: [.blue, .purple],
-                                                            startPoint: .leading,
-                                                            endPoint: .trailing
-                                                        )
-                                                    )
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.green.opacity(0.15), .green.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 48, height: 48)
 
-                                    Button(action: {
-                                        restorePurchases()
-                                    }) {
-                                        Text("Restore Purchases")
-                                            .font(.subheadline)
-                                            .fontWeight(.medium)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .fill(Color(.systemGray6))
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .disabled(isRestoring)
-                                }
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                    .font(.title2)
                             }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("All features unlocked")
+                                    .font(.body)
+                                    .fontWeight(.semibold)
+                                Text("The pushup limit and the Premium subscription were removed in version 1.0.3. ZetaReps is no longer actively maintained; the source code is available at zetareps.com.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
                         }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.secondarySystemBackground))
+                        )
+
+                        Button(action: {
+                            if let url = URL(string: "https://www.zetareps.com") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            Text("Website & Source Code")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(.systemGray6))
+                                )
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(20)
                     .background(
                         ZStack {
                             RoundedRectangle(cornerRadius: 20)
                                 .fill(Color(.systemBackground))
-                            
+
                             RoundedRectangle(cornerRadius: 20)
                                 .stroke(
                                     LinearGradient(
-                                        colors: [.yellow.opacity(0.3), .orange.opacity(0.1)],
+                                        colors: [.green.opacity(0.3), .green.opacity(0.1)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),
@@ -629,9 +567,6 @@ struct SettingsView: View {
             } message: {
                 Text("Please enable notifications in Settings to receive pushup reminders.")
             }
-            .sheet(isPresented: $showingPaywall) {
-                PaywallView(milestone: nil)
-            }
             .sheet(isPresented: $showingScheduleBuilder) {
                 ScheduleBuilderView(settings: settings)
                     .onDisappear {
@@ -681,25 +616,6 @@ struct SettingsView: View {
         return "\(hour):\(String(format: "%02d", minute))"
     }
 
-    private func restorePurchases() {
-        isRestoring = true
-
-        Task {
-            do {
-                try await subscriptionManager.restorePurchases()
-                isRestoring = false
-            } catch {
-                isRestoring = false
-                print("Failed to restore purchases: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func openSubscriptionManagement() {
-        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-            UIApplication.shared.open(url)
-        }
-    }
     
     private func iconName(for option: ColorSchemeOption) -> String {
         switch option {

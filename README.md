@@ -1,5 +1,10 @@
 # ZetaReps
 
+> **Status: free, final release, no longer maintained.**
+> Version 1.0.3 removed the Premium subscription and the 100-pushup limit; every feature is unlocked for everyone.
+> The App Store listing is available until late October 2026 and installed copies keep working after that.
+> The source is MIT licensed, so anyone can build it with Xcode or fork it. Website: https://www.zetareps.com
+
 A modern iOS fitness app for tracking pushup workouts with set-based training, performance metrics, smart notifications, and science-backed recommendations.
 
 ## Features
@@ -25,29 +30,9 @@ A modern iOS fitness app for tracking pushup workouts with set-based training, p
 - **Rest Day Management**: Preserve streaks during legitimate breaks
 - **Share Progress**: Export achievements and stats to social media
 
-### Monetization (Freemium Model)
+### Pricing
 
-**Free Tier:**
-- All core features included
-- 100 total pushups limit
-- Set-based workout tracking
-- Performance metrics (Consistency & Intensity)
-- Custom reminders and notifications
-- 7-day calendar view
-
-**Premium Tier ($0.99/month or $5.99/year with 7-day free trial):**
-- ✨ Unlimited workout history
-- ✨ Advanced analytics (full metrics charts)
-- ✨ Complete progress visualization
-- ✨ Full calendar and history access
-- ✨ All-time statistics
-- ✨ Export workout data
-- ✨ Priority support
-
-**Conversion Strategy:**
-- Paywall triggered after 100 total pushups milestone
-- Achievement-based conversion (not time-based)
-- App appears as FREE on App Store with "In-App Purchases"
+ZetaReps is completely free. There is no subscription, no in-app purchase and no pushup limit; the full history, all analytics charts, the complete calendar and all-time statistics are included for everyone.
 - Non-intrusive: Locked state on start button when limit reached
 
 ## Tech Stack
@@ -58,7 +43,6 @@ A modern iOS fitness app for tracking pushup workouts with set-based training, p
 - **Notifications**: UserNotifications framework with smart scheduling
 - **Timer**: DispatchSourceTimer for accurate tracking
 - **Charts**: SwiftUI Charts with horizontal scrolling and performance bands
-- **Monetization**: StoreKit 2 for auto-renewable subscriptions
 - **Design**: Glassmorphic UI with adaptive color schemes
 
 ## Requirements
@@ -99,7 +83,7 @@ ZetaReps/
 │   └── NotificationSchedule.swift # Notification scheduling models
 ├── Managers/
 │   ├── NotificationManager.swift  # Smart notification scheduling
-│   ├── SubscriptionManager.swift  # StoreKit 2 integration
+│   ├── SubscriptionManager.swift  # Feature access (everything unlocked)
 │   ├── MetricsCalculator.swift    # Performance metrics calculation
 │   ├── ShareManager.swift         # Social sharing
 │   └── DemoDataManager.swift      # Test data generation
@@ -111,7 +95,6 @@ ZetaReps/
     ├── WorkoutDetailView.swift    # Individual workout details
     ├── DayWorkoutsView.swift      # All workouts for a specific day
     ├── RestDayDetailView.swift    # Rest day notes
-    ├── PaywallView.swift          # Subscription upsell
     └── Settings/
         ├── SettingsView.swift                   # App settings
         ├── ScheduleBuilderView.swift            # Advanced notification scheduling
@@ -146,15 +129,6 @@ Value: "We need permission to send you pushup reminders based on your custom sch
 4. Add "In-App Purchase"
 5. Add "Push Notifications" (for local notifications)
 
-### 5. Add StoreKit Configuration File
-
-1. In Xcode, right-click on project root
-2. Select "New File" → "StoreKit Configuration File"
-3. Name it `Configuration.storekit`
-4. Add two subscription products:
-   - Product ID: `com.zetareps.premium.monthly` (Monthly, $0.99)
-   - Product ID: `com.zetareps.premium.annual` (Annual, $5.99)
-
 ### 6. Configure App Icon (Optional)
 
 1. Prepare an icon image (1024×1024 PNG)
@@ -179,8 +153,8 @@ Value: "We need permission to send you pushup reminders based on your custom sch
 - **NotificationSchedule**: Granular scheduling system with ScheduleRule, TimeComponents, Weekday
 
 ### Managers
-- **NotificationManager**: Smart notifications with context-awareness (checks rest days, recent workouts, subscription status)
-- **SubscriptionManager**: StoreKit 2 integration with transaction verification and restoration
+- **NotificationManager**: Smart notifications with context-awareness (checks rest days, recent workouts)
+- **SubscriptionManager**: Feature access; everything is unlocked for everyone
 - **MetricsCalculator**:
   - Consistency Score (0-10): Based on frequency (60%) and set completion (40%)
   - Intensity Score (0-10): Based on sets/reps (60%), difficulty (30%), volume bonus (10%)
@@ -193,8 +167,7 @@ Value: "We need permission to send you pushup reminders based on your custom sch
 - **WorkoutSessionView**: Set-based UI with workout timer, rest timer, animated backgrounds
 - **CompleteWorkoutView**: Sets/reps adjustment, difficulty selector, save & share options
 - **HistoryView**: Time range filters, metrics progress chart, reps progress chart with scrolling
-- **SettingsView**: Appearance, workout targets (custom/recommended), notifications, subscription status
-- **PaywallView**: Subscription upsell with feature comparison
+- **SettingsView**: Appearance, workout targets (custom/recommended), notifications
 - **ContentView**: TabView navigation between all main screens
 
 ## Usage Guide
@@ -253,20 +226,12 @@ Value: "We need permission to send you pushup reminders based on your custom sch
 2. Use segmented control to filter by:
    - Week: Last 7 days
    - Month: Last 30 days
-   - All Time: Complete history (Premium only)
+   - All Time: Complete history
 3. View statistics summary (total reps, workouts, averages, total time)
 4. Scroll through **Metrics Progress Chart** showing Consistency & Intensity trends with performance bands
 5. Scroll through **Reps Progress Chart** with difficulty-based color coding
 6. Tap any day on calendar to see all workouts
 7. Long-press calendar day to toggle rest day
-
-### Managing Subscription
-
-1. Complete 100 total pushups to trigger upgrade prompt
-2. View subscription options on paywall
-3. Start 7-day free trial (Monthly $0.99 or Annual $5.99)
-4. Cancel anytime in Settings → Subscription
-5. Restore purchases on new device
 
 ## Performance Metrics Details
 
@@ -305,13 +270,6 @@ The app uses smart context-aware notifications:
 3. In app Settings, verify notification schedule is configured
 4. Check active days selection
 
-### Subscription Not Unlocking
-
-1. Verify subscription purchase completed successfully
-2. Try "Restore Purchases" in Settings
-3. Check internet connection
-4. Restart app
-
 ### Metrics Not Calculating
 
 - Metrics require at least 3 completed workouts
@@ -321,7 +279,7 @@ The app uses smart context-aware notifications:
 ### Charts Not Showing
 
 - Charts require at least 1 completed workout
-- Premium users: Try different time ranges (Week/Month/All Time)
+- Try different time ranges (Week/Month/All Time)
 - Free users: Limited to weekly charts
 - Scroll horizontally for long date ranges
 
@@ -376,7 +334,6 @@ Edit [MetricsCalculator.swift](ZetaReps/Managers/MetricsCalculator.swift) to tra
 - **No account required**: Completely offline app
 - **User control**: Delete any workout or rest day anytime
 - **iOS standard**: Follows Apple's privacy guidelines
-- **StoreKit 2**: Secure in-app purchase handling
 
 ## License
 
@@ -389,7 +346,6 @@ Built with modern iOS development best practices using:
 - SwiftUI
 - SwiftData
 - UserNotifications
-- StoreKit 2
 - SwiftUI Charts
 
 Based on science-backed fitness research from 8 authoritative sources including MedicineNet, Peloton, The Citadel, and more.

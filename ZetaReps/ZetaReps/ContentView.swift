@@ -16,7 +16,8 @@ struct ContentView: View {
     
     @State private var selectedTab = 0
     @State private var showingWorkout = false
-    @State private var showingPaywall = false
+    @AppStorage("hasSeenFreeNotice103") private var hasSeenFreeNotice = false
+    @State private var showingFreeNotice = false
     @AppStorage("colorSchemePreference") private var colorSchemePreference: ColorSchemeOption = .dark
 
     private var currentColorScheme: ColorScheme? {
@@ -61,8 +62,23 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showingWorkout) {
             WorkoutSessionView()
         }
-        .sheet(isPresented: $showingPaywall) {
-            PaywallView(milestone: nil)
+        .alert("ZetaReps is now free", isPresented: $showingFreeNotice) {
+            Button("Learn more") {
+                hasSeenFreeNotice = true
+                if let url = URL(string: "https://www.zetareps.com") {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("OK") {
+                hasSeenFreeNotice = true
+            }
+        } message: {
+            Text("The 100-pushup limit and the Premium subscription are gone: every feature is now unlocked for everyone. ZetaReps is no longer actively maintained; the source code is available at zetareps.com.")
+        }
+        .onAppear {
+            if !hasSeenFreeNotice {
+                showingFreeNotice = true
+            }
         }
     }
 }

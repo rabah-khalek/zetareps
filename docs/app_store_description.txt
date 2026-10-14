@@ -28,11 +28,11 @@ Track your best workout, longest streak, and total pushups completed. Celebrate 
 PRIVACY FIRST
 All your workout data is stored securely on your device. We don't collect or share any personal information.
 
-FREE TIER
-Get started with 100 total pushups, full set-based tracking, performance metrics, smart notifications, and 7-day calendar view—completely free.
+COMPLETELY FREE
+Everything is included for everyone: unlimited pushups and workouts, full history, all analytics charts, the complete calendar and all-time statistics. There is no subscription and nothing to unlock.
 
-PREMIUM UNLOCKS
-Unlimited workout history, advanced analytics charts, full calendar access, all-time statistics, and complete progress visualization.
+PROJECT STATUS
+ZetaReps is no longer actively maintained. Version 1.0.3 is the final release. The source code is open source (MIT) at https://github.com/rabah-khalek/zetareps
 
 TERMS OF USE
 By downloading and using ZetaReps, you agree to our Terms of Use: https://zetareps.com/terms.html

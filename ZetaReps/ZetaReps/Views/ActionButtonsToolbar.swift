@@ -9,10 +9,8 @@ import SwiftUI
 
 struct ActionButtonsToolbar: View {
     @Binding var showingWorkout: Bool
-    @Binding var showingPaywall: Bool
     let workouts: [Workout]
     let settings: AppSettings
-    let subscriptionManager: SubscriptionManager
     
     var body: some View {
         HStack(spacing: 12) {
@@ -63,12 +61,7 @@ struct ActionButtonsToolbar: View {
                 let impact = UIImpactFeedbackGenerator(style: .medium)
                 impact.impactOccurred()
                 
-                let totalPushups = workouts.reduce(0) { $0 + $1.repsCompleted }
-                if !subscriptionManager.isSubscribed && totalPushups >= 100 {
-                    showingPaywall = true
-                } else {
-                    showingWorkout = true
-                }
+                showingWorkout = true
             }) {
                 Image(systemName: "play.fill")
                     .font(.system(size: 14, weight: .bold))
@@ -83,7 +76,6 @@ struct ActionButtonsToolbar: View {
                     )
                     .clipShape(Circle())
             }
-            .opacity(subscriptionManager.isSubscribed || workouts.reduce(0) { $0 + $1.repsCompleted } < 100 ? 1.0 : 0.6)
         }
     }
 }

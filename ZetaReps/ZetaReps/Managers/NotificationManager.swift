@@ -59,13 +59,6 @@ class NotificationManager: NSObject, ObservableObject {
                 return
             }
             
-            // Check if free user has reached the 100 pushup limit
-            if self.shouldStopRemindersDueToLimit() {
-                print("⛔ Free user limit reached (100 pushups). Stopping all reminders.")
-                self.notificationCenter.removeAllPendingNotificationRequests()
-                return
-            }
-            
             // Remove all pending notifications first
             self.notificationCenter.removeAllPendingNotificationRequests()
 
@@ -376,27 +369,6 @@ class NotificationManager: NSObject, ObservableObject {
         }
     }
 
-    // MARK: - Free Limit Check
-    
-    /// Check if reminders should be stopped due to free user limit
-    private func shouldStopRemindersDueToLimit() -> Bool {
-        // Check subscription status
-        guard !SubscriptionManager.shared.isSubscribed else {
-            return false // Premium users don't have limits
-        }
-        
-        // Get workout data and calculate total pushups
-        guard let container = try? ModelContainer(for: Workout.self, RestDay.self),
-              let workouts = try? container.mainContext.fetch(FetchDescriptor<Workout>()) else {
-            return false // Can't determine limit, allow notifications
-        }
-        
-        let totalPushups = workouts.reduce(0) { $0 + $1.repsCompleted }
-        
-        // Stop reminders if limit reached
-        return totalPushups >= 100
-    }
-    
     // MARK: - Debug Helper
 
     func getPendingNotificationCount(completion: @escaping (Int) -> Void) {

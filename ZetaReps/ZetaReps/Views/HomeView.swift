@@ -15,11 +15,8 @@ struct HomeView: View {
     @ObservedObject private var settings = AppSettings.shared
 
     @State private var showingWorkout = false
-    @State private var showingPaywall = false
-    @State private var paywallMilestone: Int?
     @State private var selectedWorkoutForDetail: Workout?
     @State private var selectedDateForDayView: Date?
-    @AppStorage("hasShownMilestonePaywall") private var hasShownMilestonePaywall = false
 
     var body: some View {
         NavigationStack {
@@ -50,12 +47,7 @@ struct HomeView: View {
                             let impact = UIImpactFeedbackGenerator(style: .medium)
                             impact.impactOccurred()
                             
-                            if !subscriptionManager.isSubscribed && totalPushups >= 100 {
-                                paywallMilestone = nil
-                                showingPaywall = true
-                            } else {
-                                showingWorkout = true
-                            }
+                            showingWorkout = true
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "play.fill")
@@ -76,8 +68,6 @@ struct HomeView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                             .shadow(color: .green.opacity(0.3), radius: 8, x: 0, y: 4)
                         }
-                        .opacity(subscriptionManager.isSubscribed || totalPushups < 100 ? 1.0 : 0.6)
-                        .disabled(subscriptionManager.isSubscribed ? false : totalPushups >= 100)
                         
                         // Share button (right, half width) - only show if workouts exist
                         if !workouts.isEmpty {
@@ -187,22 +177,6 @@ struct HomeView: View {
                         .transition(.scale.combined(with: .opacity))
                     }
 
-                    // Free Limit Indicator (for non-subscribers)
-                    if !subscriptionManager.isSubscribed {
-                        FreeLimitIndicator(totalPushups: totalPushups, limit: 100)
-                            .padding(.horizontal, 20)
-                            .transition(.scale.combined(with: .opacity))
-                        
-                        // Locked button if limit reached
-                        if totalPushups >= 100 {
-                            LockedWorkoutButton(action: {
-                                showingPaywall = true
-                                paywallMilestone = nil
-                            })
-                            .padding(.horizontal, 20)
-                            .transition(.scale.combined(with: .opacity))
-                        }
-                    }
 
                     Spacer(minLength: 20)
                 }
@@ -224,9 +198,6 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $showingWorkout) {
                 WorkoutSessionView()
             }
-            .sheet(isPresented: $showingPaywall) {
-                PaywallView(milestone: paywallMilestone)
-            }
             .sheet(item: $selectedWorkoutForDetail) { workout in
                 WorkoutDetailView(workout: workout)
             }
@@ -240,12 +211,6 @@ struct HomeView: View {
                         workouts: workouts
                     )
                 }
-            }
-            .task {
-                checkMilestones()
-            }
-            .onChange(of: workouts.count) { _, _ in
-                checkMilestones()
             }
         }
     }
@@ -568,18 +533,6 @@ struct HomeView: View {
 
     // MARK: - Methods
 
-    private func checkMilestones() {
-        guard !subscriptionManager.isSubscribed else { return }
-        guard !hasShownMilestonePaywall else { return }
-
-        let total = totalPushups
-
-        if total >= 100 {
-            paywallMilestone = 100
-            showingPaywall = true
-            hasShownMilestonePaywall = true
-        }
-    }
 }
 
 // MARK: - Hero Metrics Section
@@ -1043,169 +996,6 @@ struct StartWorkoutButton: View {
                     withAnimation(.easeInOut(duration: 0.1)) {
                         isPressed = false
                     }
-                }
-        )
-    }
-}
-
-// MARK: - Free Limit Indicator
-
-struct FreeLimitIndicator: View {
-    let totalPushups: Int
-    let limit: Int
-
-    private var remaining: Int {
-        max(0, limit - totalPushups)
-    }
-
-    private var progress: Double {
-        min(Double(totalPushups) / Double(limit), 1.0)
-    }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "gift.fill")
-                    .font(.title3)
-                    .foregroundStyle(.blue)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Free Version")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-
-                    if remaining > 0 {
-                        Text("\(remaining) pushups remaining")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("Limit reached - Subscribe to continue")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    }
-                }
-
-                Spacer()
-
-                Text("\(totalPushups)/\(limit)")
-                    .font(.headline)
-                    .foregroundStyle(.blue)
-            }
-
-            // Progress bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(.systemGray5))
-                        .frame(height: 8)
-
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(
-                            LinearGradient(
-                                colors: progress < 0.9 ? [.blue, .cyan] : [.orange, .red],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geometry.size.width * progress, height: 8)
-                }
-            }
-            .frame(height: 8)
-        }
-        .padding(20)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemBackground))
-                
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.primary.opacity(0.15),
-                                Color.primary.opacity(0.08)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            }
-            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
-        )
-    }
-}
-
-// MARK: - Locked Button (shown in content area if limit reached)
-
-struct LockedWorkoutButton: View {
-    let action: () -> Void
-
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .medium)
-            impact.impactOccurred()
-            action()
-        }) {
-            HStack(spacing: 12) {
-                Image(systemName: "lock.fill")
-                    .font(.title3)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.orange, .red],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Upgrade to Continue")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    
-                    Text("Free limit reached")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "arrow.right.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(.orange)
-            }
-            .padding(20)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(.systemBackground))
-                    
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(
-                            LinearGradient(
-                                colors: [.orange.opacity(0.4), .red.opacity(0.2)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
-                }
-                .shadow(color: .orange.opacity(0.2), radius: 12, x: 0, y: 6)
-            )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
-        }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    isPressed = true
-                }
-                .onEnded { _ in
-                    isPressed = false
                 }
         )
     }

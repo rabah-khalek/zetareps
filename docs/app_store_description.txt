@@ -32,7 +32,7 @@ COMPLETELY FREE
 Everything is included for everyone: unlimited pushups and workouts, full history, all analytics charts, the complete calendar and all-time statistics. There is no subscription and nothing to unlock.
 
 PROJECT STATUS
-ZetaReps is no longer actively maintained. Version 1.0.3 is the final release. The source code is open source (MIT) at https://github.com/rabah-khalek/zetareps
+ZetaReps is no longer actively maintained. Version 1.0.4 is the final release. The source code is open source (MIT) at https://github.com/rabah-khalek/zetareps
 
 TERMS OF USE
 By downloading and using ZetaReps, you agree to our Terms of Use: https://zetareps.com/terms.html

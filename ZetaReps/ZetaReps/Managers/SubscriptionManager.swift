@@ -2,7 +2,7 @@
 //  SubscriptionManager.swift
 //  ZetaReps
 //
-//  Since version 1.0.3 ZetaReps is completely free: the Premium subscription
+//  Since version 1.0.4 ZetaReps is completely free: the Premium subscription
 //  and the 100-pushup limit were removed and every feature is unlocked.
 //
 

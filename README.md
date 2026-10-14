@@ -1,7 +1,7 @@
 # ZetaReps
 
 > **Status: free, final release, no longer maintained.**
-> Version 1.0.3 removed the Premium subscription and the 100-pushup limit; every feature is unlocked for everyone.
+> Version 1.0.4 removed the Premium subscription and the 100-pushup limit; every feature is unlocked for everyone.
 > The App Store listing is available until late October 2026 and installed copies keep working after that.
 > The source is MIT licensed, so anyone can build it with Xcode or fork it. Website: https://www.zetareps.com
 

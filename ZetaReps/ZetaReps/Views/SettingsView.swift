@@ -360,7 +360,7 @@ struct SettingsView: View {
                                 Text("All features unlocked")
                                     .font(.body)
                                     .fontWeight(.semibold)
-                                Text("The pushup limit and the Premium subscription were removed in version 1.0.3. ZetaReps is no longer actively maintained; the source code is available at zetareps.com.")
+                                Text("The pushup limit and the Premium subscription were removed in version 1.0.4. ZetaReps is no longer actively maintained; the source code is available at zetareps.com.")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
